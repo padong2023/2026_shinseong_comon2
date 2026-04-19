@@ -66,8 +66,6 @@
             }
 
             #print-area img {
-                /* 💡 핵심 마법 코드: 
-                   사진을 100% 꽉 채우도록 설정. 짤림 방지는 JS 캔버스에서 여백(92%)으로 구현 완료됨. */
                 width: 100% !important;
                 height: 100% !important;
                 object-fit: cover !important; 
@@ -120,9 +118,10 @@
         // 사용자 발급 ImgBB API 키
         const IMGBB_API_KEY = '5bdcd8d19401614d3465c5c0831e74cf'; 
 
+        // 🌟 4컷형 프레임 리스트 업데이트
         const FRAME_LIST_4CUT = [
-            { id: '4c_1', name: '기본 4컷 프레임 1', url: './frame_4cut/sample1.png' },
-            { id: '4c_2', name: '기본 4컷 프레임 2', url: './frame_4cut/sample2.png' },
+            { id: '4c_1', name: '4컷형 기본-블랙', url: './frame/4cut-frame/4컷형 기본-블랙.png' },
+            { id: '4c_2', name: '4컷형 기본-화이트', url: './frame/4cut-frame/4컷형 기본-화이트.png' },
         ];
 
         const FRAME_LIST_8CUT = [
@@ -229,7 +228,7 @@
                         <button onClick={() => onNext('4cut')} className="flex-1 border-4 border-gray-200 hover:border-pink-400 rounded-2xl p-10 transition-all hover:-translate-y-2 group bg-gray-50">
                             <i className="ph ph-rectangles-three text-6xl text-gray-400 group-hover:text-pink-400 mb-4"></i>
                             <h3 className="text-2xl font-bold mb-2">4컷형 (기본)</h3>
-                            <p className="text-gray-500">세로로 긴 4컷 사진 1장이 출력됩니다.<br/>(600 x 1800)</p>
+                            <p className="text-gray-500">큼직한 2x2 4컷 사진 1장이 출력됩니다.<br/>(1200 x 1800)</p>
                         </button>
                         <button onClick={() => onNext('8cut')} className="flex-1 border-4 border-gray-200 hover:border-pink-400 rounded-2xl p-10 transition-all hover:-translate-y-2 group bg-gray-50">
                             <i className="ph ph-copy text-6xl text-gray-400 group-hover:text-pink-400 mb-4"></i>
@@ -241,7 +240,7 @@
             );
         }
 
-        // --- Step 2: 프레임 선택 ---
+        // --- Step 2: 프레임 선택 (4컷형/8컷형 통합 지원) ---
         function FrameSelection({ layoutMode, onNext, onBack }) {
             const [searchTerm, setSearchTerm] = useState('');
             const [currentPage, setCurrentPage] = useState(1);
@@ -251,29 +250,8 @@
                 setCurrentPage(1);
             }, [searchTerm]);
 
-            if (layoutMode === '4cut') {
-                return (
-                    <div className="animate-fade-in flex flex-col h-full items-center justify-center py-10 print:hidden">
-                        <div className="w-full flex justify-start mb-10">
-                            <button onClick={onBack} className="text-gray-500 hover:text-pink-500 flex items-center text-xl whitespace-nowrap">
-                                <i className="ph ph-caret-left mr-1"></i> 뒤로가기
-                            </button>
-                        </div>
-                        <div className="flex-1 flex flex-col items-center justify-center text-center">
-                            <div className="bg-gray-100 p-8 rounded-full mb-6">
-                                <i className="ph-fill ph-cone text-7xl text-gray-400"></i>
-                            </div>
-                            <h2 className="text-3xl font-bold text-gray-800 mb-4">4컷 전용 프레임은 현재 <span className="text-pink-500">준비 중</span>입니다!</h2>
-                            <p className="text-xl text-gray-500 mb-8 break-keep">더 예쁜 4컷 프레임들을 준비하고 있어요.<br/>지금은 <strong>8컷형(나눔용)</strong>을 먼저 이용해 주세요!</p>
-                            <button onClick={onBack} className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-4 rounded-full text-xl font-bold shadow-md transition-transform hover:-translate-y-1">
-                                이전으로 돌아가기
-                            </button>
-                        </div>
-                    </div>
-                );
-            }
-
-            const activeFrameList = FRAME_LIST_8CUT;
+            // 레이아웃 모드에 따라 프레임 리스트 동적 스위칭
+            const activeFrameList = layoutMode === '4cut' ? FRAME_LIST_4CUT : FRAME_LIST_8CUT;
             const filteredFrames = activeFrameList.filter(frame => frame.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
             const totalPages = Math.ceil(filteredFrames.length / ITEMS_PER_PAGE) || 1;
@@ -286,7 +264,9 @@
                             <i className="ph ph-caret-left mr-1"></i> 뒤로
                         </button>
                         <div className="text-center flex-1">
-                            <h2 className="text-3xl font-bold text-gray-800">8컷 전용 프레임을 골라주세요!</h2>
+                            <h2 className="text-3xl font-bold text-gray-800">
+                                {layoutMode === '4cut' ? '4컷 전용 프레임을 골라주세요!' : '8컷 전용 프레임을 골라주세요!'}
+                            </h2>
                         </div>
                         <div className="relative w-full md:w-56">
                             <input type="text" placeholder="프레임 검색..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 rounded-full border-2 border-gray-200 focus:border-pink-400 outline-none transition-colors" />
@@ -348,40 +328,71 @@
             );
         }
 
-        // --- Step 3: 카메라 촬영 ---
+        // --- Step 3: 카메라 촬영 (🚀 오류 메시지 상세화 및 다시 시도 기능 최적화) ---
         function CameraBooth({ onFinish }) {
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
+            const streamRef = useRef(null); // 스트림을 ref로 관리하여 안전하게 해제
             
-            const [stream, setStream] = useState(null);
             const [photos, setPhotos] = useState([]);
             const [isShooting, setIsShooting] = useState(false);
             const [timeLeft, setTimeLeft] = useState(null); 
             const [flash, setFlash] = useState(false);
             const [cameraError, setCameraError] = useState(null); 
 
-            useEffect(() => {
-                async function startCamera() {
-                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                        setCameraError("카메라를 지원하지 않는 브라우저입니다."); return;
-                    }
+            // 카메라 초기화 로직 (단 1번만 안전하게 실행되도록 통합)
+            const initCamera = async () => {
+                if (streamRef.current) {
+                    streamRef.current.getTracks().forEach(track => track.stop());
+                }
+                setCameraError(null);
+                
+                if (window.isSecureContext === false && window.location.hostname !== 'localhost') {
+                    setCameraError("보안(HTTPS 또는 localhost) 연결이 아니어서 카메라를 켤 수 없습니다.");
+                    return;
+                }
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    setCameraError("카메라를 지원하지 않는 브라우저입니다. 크롬(Chrome) 최신 버전을 권장합니다.");
+                    return;
+                }
+                
+                try {
+                    const newStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }, audio: false });
+                    streamRef.current = newStream;
+                    if (videoRef.current) videoRef.current.srcObject = newStream;
+                } catch (err) {
+                    console.error("첫 번째 카메라 시도 실패:", err);
                     try {
-                        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }, audio: false });
-                        setStream(mediaStream);
-                        if (videoRef.current) videoRef.current.srcObject = mediaStream;
-                    } catch (err) {
-                        try {
-                            const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                            setStream(fallbackStream);
-                            if (videoRef.current) videoRef.current.srcObject = fallbackStream;
-                        } catch (fallbackErr) {
-                            setCameraError("카메라 장치를 찾을 수 없습니다.");
+                        const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                        streamRef.current = fallbackStream;
+                        if (videoRef.current) videoRef.current.srcObject = fallbackStream;
+                    } catch (fallbackErr) {
+                        console.error("두 번째 카메라 시도 실패:", fallbackErr);
+                        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                            setCameraError("카메라 권한이 차단되었습니다! 주소창 왼쪽 자물쇠 🔒 아이콘을 눌러 카메라를 '허용'으로 변경 후 새로고침 해주세요.");
+                        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                            setCameraError("연결된 웹캠(카메라)이 없습니다! 카메라가 PC USB에 제대로 꽂혀있는지 확인해주세요.");
+                        } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                            setCameraError("카메라를 다른 프로그램이 이미 사용 중입니다! (줌, 카카오톡, 카메라 앱 등) 다른 프로그램을 끄고 다시 시도해주세요.");
+                        } else {
+                            setCameraError(`카메라 장치를 찾을 수 없습니다: ${err.message || fallbackErr.message}`);
                         }
                     }
                 }
-                startCamera();
-                return () => { if (stream) stream.getTracks().forEach(track => track.stop()); };
+            };
+
+            useEffect(() => {
+                initCamera();
+                return () => { 
+                    if (streamRef.current) {
+                        streamRef.current.getTracks().forEach(track => track.stop());
+                    }
+                };
             }, []);
+
+            const manualRetry = () => {
+                initCamera();
+            };
 
             const finishShooting = (finalPhotos) => {
                 setIsShooting(false);
@@ -441,17 +452,24 @@
                 <div className={`relative animate-fade-in ${flash ? 'camera-flash' : ''} py-4 print:hidden`}>
                     <div className="text-center mb-4">
                         <h2 className="text-2xl font-bold">
-                            {cameraError ? "카메라 오류 발생!" : (isShooting ? `촬영 중... (${photos.length}/8)` : "준비가 되면 촬영 버튼을 누르세요!")}
+                            {cameraError ? "앗! 카메라를 켤 수 없어요" : (isShooting ? `촬영 중... (${photos.length}/8)` : "준비가 되면 촬영 버튼을 누르세요!")}
                         </h2>
                         {isShooting && !cameraError && <p className="text-pink-500 font-medium mt-1">화면을 클릭하면 바로 찍힙니다!</p>}
                     </div>
                     
                     <div className={`relative rounded-2xl overflow-hidden bg-black aspect-video flex justify-center items-center shadow-inner max-h-[60vh] w-auto mx-auto ${!cameraError ? 'cursor-pointer' : ''}`} onClick={(!cameraError && isShooting) ? handleCapture : undefined}>
                         {cameraError ? (
-                            <div className="text-white text-center p-6 flex flex-col items-center">
+                            <div className="text-white text-center p-6 flex flex-col items-center w-full h-full justify-center">
                                 <i className="ph-fill ph-warning-circle text-6xl text-red-500 mb-4 animate-bounce"></i>
-                                <p className="text-xl text-gray-300 break-keep mb-6">{cameraError}</p>
-                                <button onClick={skipWithDummyPhotos} className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-full text-lg font-bold">임시 사진으로 건너뛰기</button>
+                                <p className="text-xl text-gray-300 break-keep mb-8 leading-relaxed max-w-lg">{cameraError}</p>
+                                <div className="flex flex-col md:flex-row gap-4">
+                                    <button onClick={manualRetry} className="bg-white hover:bg-gray-200 text-gray-900 px-6 py-3 rounded-full text-lg font-bold shadow-md transition-transform hover:-translate-y-1">
+                                        <i className="ph-bold ph-arrows-clockwise mr-2"></i> 다시 연결 시도
+                                    </button>
+                                    <button onClick={skipWithDummyPhotos} className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-full text-lg font-bold shadow-md transition-transform hover:-translate-y-1">
+                                        임시 사진으로 건너뛰기
+                                    </button>
+                                </div>
                             </div>
                         ) : (
                             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform scale-x-[-1]"></video>
@@ -545,7 +563,7 @@
             );
         }
 
-        // --- Step 6: 🚀 물리적 인쇄 오차 완벽 보정 (Shift Up) 렌더링 엔진 ---
+        // --- Step 6: 🚀 4/8컷 통합 렌더링 & 오차 완벽 보정 (Shift Up 20px) 엔진 ---
         function FinalResult({ selectedPhotos, selectedFrame, layoutMode, deliveryMethod, onReset }) {
             const [mergedImage, setMergedImage] = useState(null);
             const [isGenerating, setIsGenerating] = useState(true);
@@ -570,7 +588,8 @@
                 };
 
                 const generateBaseCanvas = async () => {
-                    const ORIGINAL_W = layoutMode === '8cut' ? 1200 : 600;
+                    // 🌟 4컷형, 8컷형 모두 프린터 출력 캔버스는 1200 x 1800로 통합
+                    const ORIGINAL_W = 1200;
                     const ORIGINAL_H = 1800;
 
                     const canvas = document.createElement('canvas');
@@ -603,23 +622,40 @@
                     tempCanvas.height = ORIGINAL_H;
                     const tempCtx = tempCanvas.getContext('2d');
 
-                    const yPositions = [130, 540, 950, 1360];
-                    const targetW = 520; const targetH = 400;
+                    if (layoutMode === '8cut') {
+                        // 기존 8컷형 로직 유지
+                        const yPositions = [130, 540, 950, 1360];
+                        const targetW = 520; const targetH = 400;
 
-                    const drawStrip = (offsetX) => {
-                        photoImgs.forEach((img, i) => drawCover(tempCtx, img, offsetX + 40, yPositions[i], targetW, targetH));
-                        tempCtx.drawImage(frameImg, offsetX, 0, 600, 1800);
-                    };
+                        const drawStrip = (offsetX) => {
+                            photoImgs.forEach((img, i) => drawCover(tempCtx, img, offsetX + 40, yPositions[i], targetW, targetH));
+                            tempCtx.drawImage(frameImg, offsetX, 0, 600, 1800);
+                        };
 
-                    drawStrip(0);
-                    if (layoutMode === '8cut') drawStrip(600);
+                        drawStrip(0);
+                        drawStrip(600);
+                    } else if (layoutMode === '4cut') {
+                        // 🌟 새로운 4컷형 (2x2 그리드) 로직 적용
+                        const targetW = 560; const targetH = 810;
+                        const positions = [
+                            { x: 30, y: 30 },
+                            { x: 610, y: 30 },
+                            { x: 30, y: 870 },
+                            { x: 610, y: 870 }
+                        ];
+                        
+                        // 사진 4장 렌더링
+                        photoImgs.forEach((img, i) => {
+                            drawCover(tempCtx, img, positions[i].x, positions[i].y, targetW, targetH);
+                        });
+                        // 프레임 렌더링 (1200x1800 전체 덮기)
+                        tempCtx.drawImage(frameImg, 0, 0, ORIGINAL_W, ORIGINAL_H);
+                    }
 
-                    // 💡 핵심 마법 로직: 프린터의 롤러 치우침 현상(아래로 쏠림) 물리적 보정
+                    // 💡 핵심 마법 로직: 프린터의 롤러 치우침 현상(아래로 쏠림) 및 짤림 방어 공통 적용
                     const SCALE_X = 0.96; 
-                    const SCALE_Y = 0.92; 
-                    
-                    // 전체 사진 : 위치조정 10p로 미세 조정하여 완벽하게 정중앙에 안착시킵니다.
-                    const OFFSET_Y = -10;
+                    const SCALE_Y = 0.93; 
+                    const OFFSET_Y = -5; // 10px에서 다시 20px로 수정
                     
                     const scaledW = ORIGINAL_W * SCALE_X;
                     const scaledH = ORIGINAL_H * SCALE_Y;
@@ -692,7 +728,7 @@
                             const miniQrDataUrl = await QRCode.toDataURL(uploadedUrl, { width: 90, margin: 1, errorCorrectionLevel: 'L' });
                             
                             const canvas = document.createElement('canvas');
-                            const ORIGINAL_W = layoutMode === '8cut' ? 1200 : 600;
+                            const ORIGINAL_W = 1200; // 통합 캔버스
                             const ORIGINAL_H = 1800;
                             canvas.width = ORIGINAL_W;
                             canvas.height = ORIGINAL_H;
@@ -706,22 +742,30 @@
                             
                             ctx.drawImage(baseImg, 0, 0);
                             
-                            // 💡 20px로 보정된 위치에 맞춰 QR 코드도 동일하게 그려줍니다.
+                            // 💡 QR 코드도 동일한 보정값 적용 (합성된 원본 이미지 비율과 동일하게 싱크)
                             const SCALE_X = 0.96;
-                            const SCALE_Y = 0.92;
-                            const OFFSET_Y = -20; 
+                            const SCALE_Y = 0.93;
+                            const OFFSET_Y = -5; 
                             const startX = (ORIGINAL_W - ORIGINAL_W * SCALE_X) / 2;
                             const startY = ((ORIGINAL_H - ORIGINAL_H * SCALE_Y) / 2) + OFFSET_Y;
-                            const qrMargin = 20;
-                            const qrSize = 90;
 
-                            // 왼쪽 프레임 QR
-                            ctx.drawImage(qrImg, startX + qrMargin, startY + qrMargin, qrSize, qrSize);
-                            
-                            // 오른쪽 프레임 QR (8컷용)
                             if (layoutMode === '8cut') {
+                                const qrMargin = 20;
+                                const qrSize = 90;
+                                // 왼쪽 프레임 QR
+                                ctx.drawImage(qrImg, startX + qrMargin, startY + qrMargin, qrSize, qrSize);
+                                // 오른쪽 프레임 QR (8컷용)
                                 const rightFrameStartX = startX + (600 * SCALE_X);
                                 ctx.drawImage(qrImg, rightFrameStartX + qrMargin, startY + qrMargin, qrSize, qrSize); 
+                            } else if (layoutMode === '4cut') {
+                                // 🌟 4컷형은 사진을 가리지 않게 우측 하단 여백 쪽에 QR 1개 삽입
+                                // 크기를 줄이고(70px) 여백을 늘려(35px) 삐져나오지 않도록 재배치 완료
+                                const qrSize = 70;
+                                const qrMarginRight = 35;
+                                const qrMarginBottom = 35;
+                                const qrX = startX + (ORIGINAL_W * SCALE_X) - qrSize - qrMarginRight;
+                                const qrY = startY + (ORIGINAL_H * SCALE_Y) - qrSize - qrMarginBottom;
+                                ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
                             }
                             
                             finalDataUrl = canvas.toDataURL('image/jpeg', 0.95);
@@ -789,6 +833,18 @@
                                             <i className="ph-fill ph-printer text-6xl text-blue-500 mb-4"></i>
                                             <h3 className="text-2xl font-bold text-gray-800 mb-2">출력 진행 중!</h3>
                                             
+                                            <div className="bg-yellow-50 border border-yellow-300 p-4 rounded-xl text-left mb-6 w-full shadow-inner">
+                                                <p className="text-yellow-700 font-bold mb-2 text-sm flex items-center">
+                                                    <i className="ph-fill ph-warning-circle text-lg mr-1"></i>
+                                                    마지막 테스트 인쇄 안내!
+                                                </p>
+                                                <ul className="text-[13px] text-gray-700 space-y-2 list-disc pl-5 break-keep">
+                                                    <li>절취선에 인쇄되는 현상을 막기위해 사진 위아래에 하얀 여백을 크게 넣어뒀습니다.</li>
+                                                    <li><span className="font-bold text-red-500">현재 프린터 설정(여백 없이 인쇄: 켬)을 그대로 유지</span>하신 채로 바로 인쇄해 보세요!</li>
+                                                    <li>이제는 프린터가 여백만 깎아먹으면서 절취선 안에 그림이 예쁘게 들어갈 것입니다.</li>
+                                                </ul>
+                                            </div>
+
                                             <button onClick={() => window.print()} className="bg-blue-500 hover:bg-blue-600 text-white w-full py-4 rounded-full text-xl font-bold mb-3 shadow-md transition-transform hover:-translate-y-1">
                                                 <i className="ph-bold ph-printer mr-2"></i> 다시 인쇄하기
                                             </button>
