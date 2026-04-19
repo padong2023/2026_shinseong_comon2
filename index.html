@@ -1,841 +1,869 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>2023 수학의 날</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap"
-      rel="stylesheet"
-    />
-    <script
-      async
-      src="https://docs.opencv.org/3.4.0/opencv.js"
-      onload="onOpenCvReady();"
-      type="text/javascript"
-    ></script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
-      integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    ></script>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신성 인생네컷</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- QR Code Generator -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
     <style>
-      body {
-        background-color: black;
-      }
-    
-      .container {
-        padding: 40px;
-      }
-    
-      .center {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
-    
-      #videoElement {
-        width: 800px;
-        height: 600px;
-    
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scaleX(-1);
-      }
-    
-      #title {
-        color: white;
-        font-family: "DM Serif Display", serif;
-        text-shadow: 1px 1px 0px rgba(220, 220, 220, 0.5);
-        letter-spacing: 4px;
-    
-        position: fixed;
-        top: 20px;
-        left: 100px;
-      }
-    
-      #captureButton {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background-color: #fff;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: fixed;
-        bottom: 20px;
-        left: calc(50% - 40px);
-        z-index: 999;
-      }
-      #captureButton:before {
-        content: "";
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        background-color: #ccc;
-      }
-      #captureButton:active:before {
-        background-color: #ddd;
-      }
-      #captureButton:active {
-        transform: scale(0.95);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-      }
-    
-      #photoList {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-auto-rows: minmax(100px, auto);
-        gap: 10px;
-        list-style: none;
-        padding: 0;
-      }
-      #photoList > li {
-        padding: 10px;
-        text-align: center;
-      }
-      #selectPhotoList {
-        display: grid;
-        grid-template-columns: repeat(1, 1fr);
-        grid-auto-rows: minmax(100px, auto);
-        gap: 40px;
-        list-style: none;
-        padding: 0;
-      }
-      #selectPhotoList > li {
-        padding: 10px;
-        text-align: center;
-      }
-    
-      #remainingCount {
-        text-align: center;
-        margin-top: 10px;
-        margin-left: 10px;
-        font-weight: bold;
-        color: white;
-      }
-    
-      #countdownTimer {
-        color: white;
-      }
-    
-      #photo-choice-section {
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        width: 90%;
-      }
-      #photoList {
-        /* border: solid salmon 2px; */
-        width: 840px;
-      }
-      #photoList > li {
-        /* border: solid white 2px; */
-        width: 240px;
-        height: 180px;
-      }
-      #photoList > li.selected {
-        box-shadow: 0 0 0 3px rgb(255, 255, 255) inset;
-      }
-      #selectPhotoList {
-        /* border: solid salmon 2px; */
-        width: 260px;
-        height: 800px;
-      }
-      #selectPhotoList > li {
-        /* border: solid white 2px; */
-        width: 260px;
-        height: 196px;
-      }
-      #selectPhotoList > li > img {
-        /* border: solid white 2px; */
-        width: 100%;
-        height: 100%;
-      }
-      .frame {
-        position: relative;
-    
-        width: 300px;
-        height: 900px;
-      }
-      .frame-img {
-        position: relative;
-        z-index: 2;
-    
-        width: 100%;
-        height: 100%;
-      }
-      .frame-hole {
-        position: absolute;
-        z-index : 1;
-    
-        width: 260px;
-        height: 200px;
-      }
-      .selected-image {
-        position: absolute;
-        object-fit: cover;
-        width: 100%;
-        height: 100%;
-      }
-      .hole1 {
-        top: 65px;
-        left: 20px;
-      }
-      .hole2 {
-        top: 270px;
-        left: 20px;
-      }
-      .hole3 {
-        top: 475px;
-        left: 20px;
-      }
-      .hole4 {
-        top: 680px;
-        left: 20px;
-      }
-
-      /*시작 20231102
-      .frame {
-        position: relative;
-    
-        width: 500px;
-        height: 1400px;
-      }
-
-      .frame-img {
-        position: relative;
-        z-index: 2;
-    
-        width: 100%;
-        height: 100%;
-      }
-      .frame-hole {
-        position: absolute;
-        z-index : 1;
-    
-        width: 435px;
-        height: 315px;
-      }
-      .selected-image {
-        position: absolute;
-        object-fit: cover;
-        width: 100%;
-        height: 100%;
-      }
-      .hole1 {
-        top: 101px;
-        left: 32px;
-      }
-
-      .hole2 {
-        top: 420px;
-        left: 32px;
-      }
-      .hole3 {
-        top: 739px;
-        left: 32px;
-      }
-      .hole4 {
-        top: 1058px;
-        left: 32px;
-      }
-      끝. 20231102 코드 수정*/
-
-      #description-section {
-        position: fixed;
-        top: 40%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
-      .desc {
-        color: white;
-      }
-      #startIcon {
-        width: 50%;
-        height: 80%;
-      }
-      #startButton {
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    
-        width: 500px;
-        height: 300px;
-    
-        background-color: white;
-        padding: 10px 20px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: 0.3s ease;
-        border: 8px solid black;
-        border-radius: 60px;
-      }
-      #startButton:hover {
-        transition: 0.3s ease;
-        filter: invert(100%);
-      }
-    
-      .check-btn {
-        width: 200px;
-        height: 200px;
-    
-        background-color: white;
-        padding: 10px 20px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: 0.3s ease;
-        border: 8px solid black;
-        border-radius: 200px;
-      }
-      .check-btn:hover {
-        transition: 0.3s ease;
-        filter: invert(100%);
-      }
-      .check-btn > img {
-        width: 80%;
-        height: 80%;
-      }
-    
-      #photo-output-section {
-        margin-top: 40px;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        width: 75%;
-      }
-    
-      #select-frame-section {
-        background-color: rgb(0, 0, 0);
-        /* border: 6px solid rgb(255, 255, 255); */
-        /* border-radius: 20px; */
-        width: 50vw;
-        height: 70vh;
-        margin-right: 80px;
-    
-        place-items : center;
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        grid-auto-rows: minmax(100px, auto);
-        gap: 10px;
-      }
-    
-      .select-frame-item {
-        width: 100px;
-        height: 100px;
-        background-color: rgb(0, 0, 0);
-        border: 4px solid rgb(255, 255, 255);
-        border-radius: 60px;
-    
-        display : flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .select-frame-item-name {
-        font-size : 1.2rem;
-        font-weight : 700;
-        color : white
-      }
-    
-      .visibility-hidden {
-        visibility: hidden;
-      }
-    
-      #memorism-photo {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-    
-      #countdownTimer {
-        position :fixed;
-        top: 5%;
-        transform: translateY(-50%);
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1;
-    
-        font-size : 6rem;
-        font-weight : 600;
-        color : white;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1 id="title">2023 수학의 날</h1>
-      <div id="description-section" class="container">
-        <button id="startButton">
-          <img id="startIcon" src="image/camera-icon.png" alt="startPhoto" />
-        </button>
-      </div>
-      <!-- 사진 촬영 섹션 -->
-      <div id="photo-capture-section" class="container visibility-hidden">
-        <span id="remainingCount">남은 사진 촬영 횟수: 4회</span>
-        <span id="countdownTimer"></span>
-        <div>
-          <video id="videoElement" width="780" height="600" autoplay></video>
-        </div>
-        <div>
-          <button id="captureButton"></button>
-        </div>
-      </div>
-      <!-- 사진 선택 섹션 -->
-      <div id="photo-choice-section" class="container center visibility-hidden">
-        <!-- 촬영한 사진 목록 -->
-        <ul id="photoList"></ul>
-        <ul id="selectPhotoList">
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-        </ul>
-        <button id="selectCompleteButton" class="check-btn" disabled>
-          <img src="image/check-icon.png" alt="select complete button" />
-        </button>
-      </div>
-      <!-- 출력될 파일 섹션 -->
-      <div id="photo-output-section" class="container center visibility-hidden">
-        <!-- 프레임 선택하는 섹션 -->
-        <div id="select-frame-section" class="container"></div>
-        <!-- 다운받을 섹션 -->
-        <div id="memorism-photo">
-          <div class="frame">
-            <div class="frame-hole hole1"></div>
-            <div class="frame-hole hole2"></div>
-            <div class="frame-hole hole3"></div>
-            <div class="frame-hole hole4"></div>
-            <img id="frame-img1" class="frame-img" src="frame/memorism-only-black.png" alt="Frame Image" />
-          </div>
-          <div class="frame">
-            <div class="frame-hole hole1"></div>
-            <div class="frame-hole hole2"></div>
-            <div class="frame-hole hole3"></div>
-            <div class="frame-hole hole4"></div>
-            <img id="frame-img2" class="frame-img" src="frame/memorism-only-black.png" alt="Frame Image" />
-          </div>
-        </div>
-
-        <!-- 다운로드 버튼 -->
-        <button id="downloadButton" class="check-btn">
-          <img src="image/check-icon.png" alt="photo download button" />
-        </button>
-      </div>
-    </div>
-    <script>
-      const descriptionSectionEl = document.getElementById(
-    "description-section"
-  );
-  const startButtonEl = document.getElementById("startButton");
-  const downloadButtonEl = document.getElementById("downloadButton");
-
-  const videoElement = document.getElementById("videoElement");
-  const photoCaptureSectionEl = document.getElementById(
-    "photo-capture-section"
-  );
-  const photoChoiceSectionEl = document.getElementById(
-    "photo-choice-section"
-  );
-  const photoOutputSectionEl = document.getElementById(
-    "photo-output-section"
-  );
-  const captureButton = document.getElementById("captureButton");
-  const photoList = document.getElementById("photoList");
-  const selectPhotoList = document.getElementById("selectPhotoList");
-  const remainingCountElement = document.getElementById("remainingCount");
-  const countdownTimer = document.getElementById("countdownTimer");
-  const selectCompleteButtonEl = document.getElementById(
-    "selectCompleteButton"
-  );
-
-  const frameHoles = document.querySelectorAll(".frame-hole");
-  const frameArr = [
-    {
-      imgSrc: "frame/가나가나디디 프레임.png",
-      name: "가나디"
-    },
-    {
-      imgSrc: "frame/경찰과 도둑 프레임.png",
-      name: "경도"
-    },
-    {
-      imgSrc: "frame/고양이 프레임.png",
-      name: "고양이"
-    },
-    {
-      imgSrc: "frame/곰돌이 프레임.png",
-      name: "곰돌이"
-    },
-    {
-      imgSrc: "frame/다마고치 프레임.png",
-      name: "다마고치"
-    },
-    {
-      imgSrc: "frame/도둑 프레임.png",
-      name: "도둑"
-    },
-    {
-      imgSrc: "frame/도비는 과연 자유일까 프레임.png",
-      name: "도비"
-    },
-   
-    {
-      imgSrc: "frame/라이즈 원빈 프레임.png",
-      name: "원빈"
-    },
-    {
-      imgSrc: "frame/리락쿠마 프레임.png",
-      name: "리락쿠마"
-    },
-    {
-      imgSrc: "frame/마루는강쥐 프레임.png",
-      name: "마루"
-    },
-    {
-      imgSrc: "frame/미쿠 프레임.png",
-      name: "미쿠"
-    },
-    {
-      imgSrc: "frame/벛꽃 프레임.png",
-      name: "벛꽃"
-    },
-    {
-      imgSrc: "frame/빤쮸토끼 프레임.png",
-      name: "빤쮸토끼"
-    },
-    {
-      imgSrc: "frame/세븐틴 프레임.png",
-      name: "세븐틴"
-    },
-    {
-      imgSrc: "frame/스누피 프레임.png",
-      name: "스누피"
-    },
-    {
-      imgSrc: "frame/스플레툰 프레임.png",
-      name: "스플레툰"
-    },
-    {
-      imgSrc: "frame/안경만두 프레임.png",
-      name: "안경만두"
-    },
-    {
-      imgSrc: "frame/우주먼지 프레임.png",
-      name: "우주먼지"
-    },
-    {
-      imgSrc: "frame/철학 프레임.png",
-      name: "철학"
-    },
-    {
-      imgSrc: "frame/테토&미쿠 프레임.png",
-      name: "테토&미쿠"
-    },
-    {
-      imgSrc: "frame/펭귄 프레임.png",
-      name: "펭귄"
-    },
-    {
-      imgSrc: "frame/하찮은 고앵이 프레임.png",
-      name: "고앵이"
-    },
-    {
-      imgSrc: "frame/해찬 프레임.png",
-      name: "해찬"
-    },
-    {
-      imgSrc: "frame/황제성은 황제다 프레임.png",
-      name: "황제성"
-    },
-    {
-      imgSrc: "frame/히스이 프레임.png",
-      name: "히스이"
-    },
-
-  ];
-
-  const photoArr = []; // 촬영한 이미지 배열
-  const selectedPhotoArr = []; // 선택된 이미지 배열
-
-  const maxCount = 7; // 최대 촬영 횟수
-  let remainingCount = maxCount; // 현재 남은 촬영 횟수
-
-  const countdownDuration = 5; // 카운트다운 기간 (초)
-  let countdownIntervalId; // 카운트다운 인터벌 ID
-  let countdownTime = countdownDuration; // 현재 카운트다운 시간
-
-  // 남은 촬영 횟수 update
-  function updateRemainingCount() {
-    remainingCountElement.innerHTML = `남은 사진 촬영 횟수: ${remainingCount}회`;
-  }
-
-  // 10초 카운트 다운
-  function startCountdown() {
-    countdownTime = countdownDuration;
-    countdownTimer.textContent = countdownTime;
-    playAudio();
-
-    countdownIntervalId = setInterval(() => {
-      countdownTime--;
-      countdownTimer.textContent = countdownTime;
-
-      if (countdownTime <= 0) {
-        clearInterval(countdownIntervalId);
-        capturePhoto();
-      }
-    }, 1000);
-  }
-
-  const audio = new Audio("voice/jammin-countdown.mp3");
-
-  function playAudio() {
-    if (audio.paused) {
-      audio.play();
-    } else {
-      audio.currentTime = 0; // 현재 위치를 처음으로 설정
-      audio.play();
-    }
-  }
-
-  function stopAudio() {
-    audio.pause();
-    audio.currentTime = 0; // 현재 위치를 처음으로 설정
-  }
-
-  // 사진 촬영
-  function capturePhoto() {
-    clearInterval(countdownIntervalId); // 카운트다운 중지
-
-    const canvas = document.createElement("canvas");
-    canvas.width = videoElement.width;
-    canvas.height = videoElement.height;
-    const context = canvas.getContext("2d");
-    context.scale(-1, 1); // 이미지 좌우 반전 처리
-    context.drawImage(
-      videoElement,
-      -canvas.width,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-    // 개별 이미지 다운로드
-    // const link = document.createElement("a");
-    // link.href = canvas.toDataURL();
-    // link.download = "captured_image.png";
-    // link.click();
-
-    // 촬영한 이미지를 배열에 추가
-    photoArr.push(canvas.toDataURL());
-
-    // 이미지를 목록에 표시
-    const listItem = document.createElement("li");
-    const image = document.createElement("img");
-    image.style.width = "240px";
-    image.style.height = "180px";
-    image.src = canvas.toDataURL();
-    listItem.appendChild(image);
-    photoList.appendChild(listItem);
-
-    // 남은 사진 촬영 횟수 갱신
-    remainingCount--;
-    updateRemainingCount();
-
-    // 사진 촬영 횟수가 남아있을 경우 카운트다운 재시작
-    if (remainingCount > 0) {
-      startCountdown();
-    } else {
-      captureButton.disabled = true; // 사진 촬영 버튼 비활성화
-      stopAudio();
-      choicePhoto();
-    }
-  }
-
-  const selectPhotoItems = Array.from(
-    selectPhotoList.querySelectorAll("li")
-  );
-
-  // selectedPhotoArr를 virtual frame에 넣기
-  function inputVirtualFrame() {
-    selectPhotoItems.forEach((item, index) => {
-      item.innerHTML = "";
-
-      const imageSrc = selectedPhotoArr[index];
-      if (imageSrc) {
-        const image = document.createElement("img");
-        image.src = imageSrc;
-        image.alt = `Selected Image ${index + 1}`;
-
-        item.appendChild(image);
-      }
-    });
-  }
-
-  // selectedPhotoArr를 frame에 넣기
-  function inputPhotoFrame() {
-    frameHoles.forEach((hole, index) => {
-      if (index >= selectedPhotoArr.length * 2) {
-        hole.innerHTML = "";
-
-        return false;
-      }
-
-      const imageSrc = selectedPhotoArr[index % selectedPhotoArr.length];
-      if (imageSrc) {
-        const image = document.createElement("img");
-        image.src = imageSrc;
-        image.alt = `Selected Image ${index + 1}`;
-        image.classList.add("selected-image");
-        hole.appendChild(image);
-      }
-    });
-  }
-
-  // 사진 몇개 골랐는지 체크 -> 버튼 활성화 관리
-  function checkSelectedPhoto() {
-    if (selectedPhotoArr.length !== 4) {
-      selectCompleteButtonEl.setAttribute("disabled", true);
-    } else {
-      selectCompleteButtonEl.removeAttribute("disabled");
-    }
-  }
-
-  const selectFrameSectionEl = document.getElementById(
-    "select-frame-section"
-  );
-
-  const frameImg1 = document.querySelector('#frame-img1');
-  const frameImg2 = document.querySelector('#frame-img2');
-
-  // 4장 다 고르면 프레임 고르는 섹션으로 넘어가기
-  function choiceFrame() {
-    // 화면 전환
-    photoChoiceSectionEl.classList.toggle("visibility-hidden");
-    photoOutputSectionEl.classList.toggle("visibility-hidden");
-
-    // 프레임 carousel item div 생성
-    frameArr.forEach((frame, index) => {
-      const divTag = document.createElement("div");
-      divTag.classList.add("select-frame-item");
-      divTag.id = `frameImg${index}`;
-      
-      divTag.addEventListener('click', () => {
-        frameImg1.src = frameArr[index].imgSrc;
-        frameImg2.src = frameArr[index].imgSrc;
-      })
-
-      // 로고 src가 없다면
-      if(!frameArr[index].logoSrc) {
-        const textTag = document.createElement('div');
-        textTag.classList.add('select-frame-item-name');
-        textTag.innerHTML = frameArr[index].name;
-        divTag.appendChild(textTag);
-      } else {
-        divTag.style.backgroundImage = `url('${frameArr[index].logoSrc}')`;
-        divTag.style.backgroundSize = 'contain';
-      }
-
-      selectFrameSectionEl.appendChild(divTag);
-    });
-  }
-
-  selectCompleteButtonEl.addEventListener("click", () => {
-    choiceFrame();
-  });
-
-  // 사진 고르기 기능
-  function choicePhoto() {
-    photoCaptureSectionEl.classList.toggle("visibility-hidden"); // 웹캠 가리기
-    photoChoiceSectionEl.classList.toggle("visibility-hidden"); // 사진 리스트 보여주기
-
-    const photoArrItems = Array.from(
-      photoList.querySelectorAll("#photoList > li")
-    );
-
-    // 고른 사진 배열에 넣기
-    for (let i = 0; i < photoArrItems.length; i++) {
-      const photoItem = photoArrItems[i];
-
-      photoItem.addEventListener("click", function () {
-        if (photoItem.classList.contains("selected")) {
-          photoItem.classList.remove("selected");
-          const imgSrc = photoItem.querySelector("img").src;
-          const index = selectedPhotoArr.indexOf(imgSrc);
-          if (index > -1) {
-            selectedPhotoArr.splice(index, 1);
-          }
-        } else {
-          if (selectedPhotoArr.length >= 4) {
-            return; // 최대 4개의 사진을 선택했다면 더이상 선택하지 못함
-          }
-          photoItem.classList.add("selected");
-          const imgSrc = photoItem.querySelector("img").src;
-          selectedPhotoArr.push(imgSrc);
+        /* 웹 폰트 설정 */
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+        body {
+            font-family: 'Jua', sans-serif;
+            background-color: #f3f4f6;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        checkSelectedPhoto();
-        inputPhotoFrame();
-        inputVirtualFrame();
-      });
-    }
-  }
+        /* 🚀 인쇄 전용 CSS (2장 출력 및 여백 버그 완전 해결) */
+        #print-area {
+            display: none;
+        }
 
-  // 완성된 사진 다운로드
-  function downloadImage() {
-    // HTML 요소를 캡처하여 캔버스에 그림
-    const element = document.getElementById("memorism-photo");
-    html2canvas(element, { scale: 2 }).then(function (canvas) {
-      // 캔버스를 이미지 데이터 URL로 변환합니다.
-      const image = canvas.toDataURL("image/png");
+        @media print {
+            @page { 
+                size: 4in 6in; /* CP1500 4x6 인화지 규격 */
+                margin: 0 !important; /* 브라우저 여백 제거 */
+            }
 
-      // 가상 링크를 생성하여 이미지 다운로드를 트리거
-      const link = document.createElement("a");
-      link.href = image;
-      link.download = "shinseong_memorism.png";
-      link.click();
-    });
-  }
+            html, body {
+                margin: 0 !important; 
+                padding: 0 !important; 
+                width: 100% !important;
+                height: 100% !important;
+                background-color: white !important; 
+                overflow: hidden !important;
+            }
+            
+            /* 화면의 숨겨진 잔여 요소들(script 포함)이 2장을 만들지 않도록 print-area 빼고 모두 100% 강제 숨김 */
+            body > * {
+                display: none !important;
+            }
+            
+            /* 인쇄 영역 활성화 (정확히 화면 100% 고정) */
+            body > #print-area {
+                display: block !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background-color: white !important;
+                z-index: 999999 !important;
+            }
 
-  downloadButtonEl.addEventListener("click", downloadImage);
+            #print-area img {
+                /* 💡 핵심 마법 코드: 
+                   사진을 100% 꽉 채우도록 설정. 짤림 방지는 JS 캔버스에서 여백(92%)으로 구현 완료됨. */
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important; 
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+        }
 
-  // 사진 촬영 시작
-  function initialize() {
-    descriptionSectionEl.classList.toggle("visibility-hidden");
-    photoCaptureSectionEl.classList.toggle("visibility-hidden");
+        .camera-flash { animation: flash 0.5s ease-out; }
+        @keyframes flash {
+            0% { background-color: rgba(255,255,255,1); }
+            100% { background-color: rgba(255,255,255,0); }
+        }
 
-    remainingCount = maxCount;
-    updateRemainingCount();
+        /* 커스텀 스크롤바 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #fbcfe8; 
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #f472b6; 
+        }
 
-    if (remainingCount > 0) {
-      startCountdown();
-    } else {
-      captureButton.disabled = true; // 사진 촬영 버튼 비활성화
-    }
-  }
+        .bg-checker {
+            background-color: #f0f0f0;
+            background-image: 
+                linear-gradient(45deg, #ccc 25%, transparent 25%), 
+                linear-gradient(-45deg, #ccc 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #ccc 75%), 
+                linear-gradient(-45deg, transparent 75%, #ccc 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-  // OpenCV.js 로드 후 실행될 함수
-  function onOpenCvReady() {
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => {
-        videoElement.srcObject = stream;
-        videoElement.play();
-      })
-      .catch((error) => {
-        console.error("Error accessing webcam:", error);
-      });
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
 
-    captureButton.addEventListener("click", () => {
-      capturePhoto();
-    });
-  }
+        // 사용자 발급 ImgBB API 키
+        const IMGBB_API_KEY = '5bdcd8d19401614d3465c5c0831e74cf'; 
 
-  startButtonEl.addEventListener("click", initialize);
+        const FRAME_LIST_4CUT = [
+            { id: '4c_1', name: '기본 4컷 프레임 1', url: './frame_4cut/sample1.png' },
+            { id: '4c_2', name: '기본 4컷 프레임 2', url: './frame_4cut/sample2.png' },
+        ];
+
+        const FRAME_LIST_8CUT = [
+            { id: 'f1', name: '가나가나디디 프레임', url: './frame/가나가나디디 프레임.png' },
+            { id: 'f2', name: '곰돌이 프레임', url: './frame/곰돌이 프레임.png' },
+            { id: 'f3', name: '다마고치 프레임', url: './frame/다마고치 프레임.png' },
+            { id: 'f4', name: '도둑 프레임', url: './frame/미쿠 프레임.png' },
+            { id: 'f5', name: '도비는 과연 자유일까 프레임', url: './frame/도비는 과연 자유일까 프레임.png' },
+            { id: 'f6', name: '라이즈 원빈 프레임', url: './frame/라이즈 원빈 프레임.png' },
+            { id: 'f7', name: '리락쿠마 프레임', url: './frame/리락쿠마 프레임.png' },
+            { id: 'f8', name: '마루는강쥐 프레임', url: './frame/마루는강쥐 프레임.png' },
+            { id: 'f9', name: '미소녀_프레임', url: './frame/미소녀_프레임.png' },
+            { id: 'f10', name: '미쿠 프레임', url: './frame/미쿠 프레임.png' },
+            { id: 'f11', name: '벛꽃 프레임', url: './frame/벛꽃 프레임.png' },
+            { id: 'f12', name: '빤쮸토끼 프레임', url: './frame/빤쮸토끼 프레임.png' },
+            { id: 'f13', name: '세븐틴 프레임', url: './frame/세븐틴 프레임.png' },
+            { id: 'f14', name: '스누피 프레임', url: './frame/스누피 프레임.png' },
+            { id: 'f15', name: '스플래툰 프레임', url: './frame/스플래툰 프레임.png' },
+            { id: 'f16', name: '우주먼지 프레임', url: './frame/우주먼지 프레임.png' },
+            { id: 'f17', name: '철학 프레임', url: './frame/철학 프레임.png' },
+            { id: 'f18', name: '테토&미쿠 프레임', url: './frame/테토&미쿠 프레임.png' },
+            { id: 'f19', name: '펭귄 프레임', url: './frame/펭귄 프레임.png' },
+            { id: 'f20', name: '하찮은 고앵이 프레임', url: './frame/하찮은 고앵이 프레임.png' },
+            { id: 'f21', name: '해찬 프레임', url: './frame/해찬 프레임.png' },
+            { id: 'f22', name: '황제성은 황제다 프레임', url: './frame/황제성은 황제다 프레임.png' },
+            { id: 'f23', name: '히스이 프레임', url: './frame/히스이 프레임.png' }
+        ];
+
+        function App() {
+            const [step, setStep] = useState('layout');
+            const [layoutMode, setLayoutMode] = useState('4cut'); 
+            const [selectedFrame, setSelectedFrame] = useState(null);
+            
+            const [photos, setPhotos] = useState([]); 
+            const [selectedPhotos, setSelectedPhotos] = useState([]); 
+            const [deliveryMethod, setDeliveryMethod] = useState(null); 
+
+            const resetBooth = () => {
+                setStep('layout');
+                setLayoutMode('4cut');
+                setSelectedFrame(null);
+                setPhotos([]);
+                setSelectedPhotos([]);
+                setDeliveryMethod(null);
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center p-4 print:p-0">
+                    <div className="mb-6 text-center print:hidden">
+                        <h1 className="text-4xl md:text-5xl font-bold text-pink-500 mb-2">📸 신성 인생네컷 📸</h1>
+                        <p className="text-gray-600">추억을 기록하고 바로 인쇄하세요!</p>
+                    </div>
+
+                    <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col print:shadow-none print:bg-transparent print:p-0 print:overflow-visible">
+                        {step === 'layout' && (
+                            <LayoutSelection onNext={(mode) => { setLayoutMode(mode); setStep('frame'); }} />
+                        )}
+                        {step === 'frame' && (
+                            <FrameSelection 
+                                layoutMode={layoutMode} 
+                                onNext={(frame) => { setSelectedFrame(frame); setStep('camera'); }} 
+                                onBack={() => setStep('layout')} 
+                            />
+                        )}
+                        {step === 'camera' && (
+                            <CameraBooth 
+                                onFinish={(capturedPhotos) => { 
+                                    setPhotos(capturedPhotos); 
+                                    setStep('select'); 
+                                }} 
+                            />
+                        )}
+                        {step === 'select' && (
+                            <PhotoSelection 
+                                photos={photos} 
+                                onComplete={(selected) => { setSelectedPhotos(selected); setStep('branch'); }} 
+                            />
+                        )}
+                        {step === 'branch' && (
+                            <ActionBranching 
+                                onNext={(method) => { setDeliveryMethod(method); setStep('result'); }} 
+                            />
+                        )}
+                        {step === 'result' && (
+                            <FinalResult 
+                                selectedPhotos={selectedPhotos} 
+                                selectedFrame={selectedFrame}
+                                layoutMode={layoutMode}
+                                deliveryMethod={deliveryMethod}
+                                onReset={resetBooth}
+                            />
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Step 1: 레이아웃 선택 ---
+        function LayoutSelection({ onNext }) {
+            return (
+                <div className="text-center animate-fade-in my-8 print:hidden">
+                    <h2 className="text-3xl mb-8">원하는 인쇄 타입을 선택해주세요!</h2>
+                    <div className="flex flex-col md:flex-row gap-6 justify-center">
+                        <button onClick={() => onNext('4cut')} className="flex-1 border-4 border-gray-200 hover:border-pink-400 rounded-2xl p-10 transition-all hover:-translate-y-2 group bg-gray-50">
+                            <i className="ph ph-rectangles-three text-6xl text-gray-400 group-hover:text-pink-400 mb-4"></i>
+                            <h3 className="text-2xl font-bold mb-2">4컷형 (기본)</h3>
+                            <p className="text-gray-500">세로로 긴 4컷 사진 1장이 출력됩니다.<br/>(600 x 1800)</p>
+                        </button>
+                        <button onClick={() => onNext('8cut')} className="flex-1 border-4 border-gray-200 hover:border-pink-400 rounded-2xl p-10 transition-all hover:-translate-y-2 group bg-gray-50">
+                            <i className="ph ph-copy text-6xl text-gray-400 group-hover:text-pink-400 mb-4"></i>
+                            <h3 className="text-2xl font-bold mb-2">8컷형 (나눔용)</h3>
+                            <p className="text-gray-500">4컷 사진 2장이 한 장에 나란히 인쇄됩니다.<br/>(1200 x 1800)</p>
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Step 2: 프레임 선택 ---
+        function FrameSelection({ layoutMode, onNext, onBack }) {
+            const [searchTerm, setSearchTerm] = useState('');
+            const [currentPage, setCurrentPage] = useState(1);
+            const ITEMS_PER_PAGE = 4; 
+            
+            useEffect(() => {
+                setCurrentPage(1);
+            }, [searchTerm]);
+
+            if (layoutMode === '4cut') {
+                return (
+                    <div className="animate-fade-in flex flex-col h-full items-center justify-center py-10 print:hidden">
+                        <div className="w-full flex justify-start mb-10">
+                            <button onClick={onBack} className="text-gray-500 hover:text-pink-500 flex items-center text-xl whitespace-nowrap">
+                                <i className="ph ph-caret-left mr-1"></i> 뒤로가기
+                            </button>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center justify-center text-center">
+                            <div className="bg-gray-100 p-8 rounded-full mb-6">
+                                <i className="ph-fill ph-cone text-7xl text-gray-400"></i>
+                            </div>
+                            <h2 className="text-3xl font-bold text-gray-800 mb-4">4컷 전용 프레임은 현재 <span className="text-pink-500">준비 중</span>입니다!</h2>
+                            <p className="text-xl text-gray-500 mb-8 break-keep">더 예쁜 4컷 프레임들을 준비하고 있어요.<br/>지금은 <strong>8컷형(나눔용)</strong>을 먼저 이용해 주세요!</p>
+                            <button onClick={onBack} className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-4 rounded-full text-xl font-bold shadow-md transition-transform hover:-translate-y-1">
+                                이전으로 돌아가기
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            const activeFrameList = FRAME_LIST_8CUT;
+            const filteredFrames = activeFrameList.filter(frame => frame.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            const totalPages = Math.ceil(filteredFrames.length / ITEMS_PER_PAGE) || 1;
+            const currentFrames = filteredFrames.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+            return (
+                <div className="animate-fade-in flex flex-col h-full w-full print:hidden">
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0 pb-2 border-b-2 border-pink-100">
+                        <button onClick={onBack} className="text-gray-500 hover:text-pink-500 flex items-center text-xl whitespace-nowrap">
+                            <i className="ph ph-caret-left mr-1"></i> 뒤로
+                        </button>
+                        <div className="text-center flex-1">
+                            <h2 className="text-3xl font-bold text-gray-800">8컷 전용 프레임을 골라주세요!</h2>
+                        </div>
+                        <div className="relative w-full md:w-56">
+                            <input type="text" placeholder="프레임 검색..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 rounded-full border-2 border-gray-200 focus:border-pink-400 outline-none transition-colors" />
+                            <i className="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                        </div>
+                    </div>
+                    
+                    <div className="flex-1 flex flex-col justify-between">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 p-2">
+                            {currentFrames.length > 0 ? currentFrames.map((frame) => (
+                                <div key={frame.id} onClick={() => onNext(frame.url)} className="cursor-pointer border-4 border-transparent hover:border-pink-400 rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all flex flex-col bg-white hover:-translate-y-1 group">
+                                    <div className="w-full h-[50vh] bg-checker flex justify-center items-center p-2 md:p-4">
+                                        <img 
+                                            src={frame.url} 
+                                            alt={frame.name} 
+                                            className="max-w-full max-h-full object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-[1.02]" 
+                                            onError={(e) => { 
+                                                e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="1800" viewBox="0 0 600 1800"><rect width="600" height="1800" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="40" fill="%239ca3af">이미지 오류</text></svg>'; 
+                                            }} 
+                                        />
+                                    </div>
+                                    <div className="p-3 md:p-4 text-center border-t bg-white mt-auto">
+                                        <span className="text-sm md:text-base font-bold text-gray-800 leading-tight group-hover:text-pink-500 transition-colors">{frame.name}</span>
+                                    </div>
+                                </div>
+                            )) : (
+                                <div className="col-span-full flex flex-col justify-center items-center h-[50vh] text-gray-500 text-xl">
+                                    <i className="ph ph-file-x text-6xl mb-3 text-gray-300"></i>
+                                    검색 결과가 없습니다.
+                                </div>
+                            )}
+                        </div>
+
+                        {totalPages > 1 && (
+                            <div className="flex justify-center items-center space-x-6 mt-8 mb-2">
+                                <button 
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className={`w-14 h-14 flex justify-center items-center rounded-full text-2xl transition-all shadow-sm ${currentPage === 1 ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-white border-2 border-pink-200 text-pink-500 hover:bg-pink-50 hover:border-pink-400'}`}
+                                >
+                                    <i className="ph-bold ph-caret-left"></i>
+                                </button>
+                                
+                                <div className="text-xl font-bold text-gray-800 bg-gray-100 px-6 py-2 rounded-full">
+                                    {currentPage} <span className="text-gray-400 font-medium">/ {totalPages}</span>
+                                </div>
+                                
+                                <button 
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className={`w-14 h-14 flex justify-center items-center rounded-full text-2xl transition-all shadow-sm ${currentPage === totalPages ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-white border-2 border-pink-200 text-pink-500 hover:bg-pink-50 hover:border-pink-400'}`}
+                                >
+                                    <i className="ph-bold ph-caret-right"></i>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Step 3: 카메라 촬영 ---
+        function CameraBooth({ onFinish }) {
+            const videoRef = useRef(null);
+            const canvasRef = useRef(null);
+            
+            const [stream, setStream] = useState(null);
+            const [photos, setPhotos] = useState([]);
+            const [isShooting, setIsShooting] = useState(false);
+            const [timeLeft, setTimeLeft] = useState(null); 
+            const [flash, setFlash] = useState(false);
+            const [cameraError, setCameraError] = useState(null); 
+
+            useEffect(() => {
+                async function startCamera() {
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        setCameraError("카메라를 지원하지 않는 브라우저입니다."); return;
+                    }
+                    try {
+                        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }, audio: false });
+                        setStream(mediaStream);
+                        if (videoRef.current) videoRef.current.srcObject = mediaStream;
+                    } catch (err) {
+                        try {
+                            const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                            setStream(fallbackStream);
+                            if (videoRef.current) videoRef.current.srcObject = fallbackStream;
+                        } catch (fallbackErr) {
+                            setCameraError("카메라 장치를 찾을 수 없습니다.");
+                        }
+                    }
+                }
+                startCamera();
+                return () => { if (stream) stream.getTracks().forEach(track => track.stop()); };
+            }, []);
+
+            const finishShooting = (finalPhotos) => {
+                setIsShooting(false);
+                onFinish(finalPhotos);
+            };
+
+            const handleCapture = useCallback(() => {
+                if (videoRef.current && canvasRef.current && !cameraError) {
+                    const video = videoRef.current;
+                    const canvas = canvasRef.current;
+                    canvas.width = video.videoWidth || 1280;
+                    canvas.height = video.videoHeight || 720;
+                    const ctx = canvas.getContext('2d');
+                    ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                    
+                    setPhotos(prev => {
+                        const newPhotos = [...prev, dataUrl];
+                        if (newPhotos.length >= 8) { finishShooting(newPhotos); setTimeLeft(null); } 
+                        else { setTimeLeft(5); }
+                        return newPhotos;
+                    });
+                    
+                    setFlash(true); setTimeout(() => setFlash(false), 300);
+                }
+            }, [cameraError]);
+
+            useEffect(() => {
+                if (!isShooting || timeLeft === null || cameraError) return;
+                if (timeLeft === 0) { handleCapture(); return; }
+                const timerId = setTimeout(() => { setTimeLeft(timeLeft - 1); }, 1000);
+                return () => clearTimeout(timerId);
+            }, [timeLeft, isShooting, handleCapture, cameraError]);
+
+            const startShooting = () => {
+                if (isShooting || cameraError) return;
+                setIsShooting(true); setPhotos([]); 
+                setTimeLeft(5);
+            };
+
+            const skipWithDummyPhotos = () => {
+                const dummyPhotos = [];
+                const canvas = document.createElement('canvas');
+                canvas.width = 1280; canvas.height = 720; const ctx = canvas.getContext('2d');
+                for(let i=0; i<8; i++) {
+                    ctx.fillStyle = `hsl(${i * 45}, 70%, 80%)`; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = "#333"; ctx.font = "bold 80px sans-serif"; ctx.textAlign = "center";
+                    ctx.fillText(`임시 사진 ${i+1}`, canvas.width/2, canvas.height/2);
+                    dummyPhotos.push(canvas.toDataURL('image/jpeg', 0.8));
+                }
+                onFinish(dummyPhotos);
+            };
+
+            return (
+                <div className={`relative animate-fade-in ${flash ? 'camera-flash' : ''} py-4 print:hidden`}>
+                    <div className="text-center mb-4">
+                        <h2 className="text-2xl font-bold">
+                            {cameraError ? "카메라 오류 발생!" : (isShooting ? `촬영 중... (${photos.length}/8)` : "준비가 되면 촬영 버튼을 누르세요!")}
+                        </h2>
+                        {isShooting && !cameraError && <p className="text-pink-500 font-medium mt-1">화면을 클릭하면 바로 찍힙니다!</p>}
+                    </div>
+                    
+                    <div className={`relative rounded-2xl overflow-hidden bg-black aspect-video flex justify-center items-center shadow-inner max-h-[60vh] w-auto mx-auto ${!cameraError ? 'cursor-pointer' : ''}`} onClick={(!cameraError && isShooting) ? handleCapture : undefined}>
+                        {cameraError ? (
+                            <div className="text-white text-center p-6 flex flex-col items-center">
+                                <i className="ph-fill ph-warning-circle text-6xl text-red-500 mb-4 animate-bounce"></i>
+                                <p className="text-xl text-gray-300 break-keep mb-6">{cameraError}</p>
+                                <button onClick={skipWithDummyPhotos} className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-full text-lg font-bold">임시 사진으로 건너뛰기</button>
+                            </div>
+                        ) : (
+                            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform scale-x-[-1]"></video>
+                        )}
+                        
+                        {isShooting && timeLeft > 0 && !cameraError && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 pointer-events-none">
+                                <span className="text-9xl text-white font-bold drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">{timeLeft}</span>
+                            </div>
+                        )}
+                        <canvas ref={canvasRef} className="hidden"></canvas>
+                    </div>
+
+                    <div className="mt-6 flex justify-center space-x-4">
+                        {!isShooting ? (
+                            <button onClick={startShooting} disabled={!!cameraError} className={`px-10 py-4 rounded-full text-2xl font-bold shadow-lg transition-transform ${cameraError ? 'hidden' : 'bg-pink-500 text-white hover:scale-105'}`}>
+                                <i className="ph-fill ph-camera mr-2"></i> 촬영 시작
+                            </button>
+                        ) : (
+                            <button onClick={handleCapture} disabled={!!cameraError} className="bg-white border-4 border-pink-500 text-pink-500 px-10 py-4 rounded-full text-2xl font-bold shadow-lg hover:scale-105 z-10">
+                                <i className="ph-fill ph-lightning mr-2"></i> 바로 찍기
+                            </button>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Step 4: 사진 선택 ---
+        function PhotoSelection({ photos, onComplete }) {
+            const [selected, setSelected] = useState([]);
+
+            const toggleSelection = (index) => {
+                if (selected.includes(index)) setSelected(selected.filter(i => i !== index));
+                else if (selected.length < 4) setSelected([...selected, index]);
+            };
+
+            const handleComplete = () => {
+                if (selected.length === 4) onComplete(selected.map(i => photos[i]));
+            };
+
+            return (
+                <div className="animate-fade-in text-center py-4 print:hidden">
+                    <h2 className="text-3xl mb-2">가장 마음에 드는 4장을 골라주세요!</h2>
+                    <p className="text-gray-500 mb-6">선택한 순서대로 프레임에 배치됩니다. <span className="text-pink-500 font-bold">({selected.length}/4)</span></p>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
+                        {photos.map((photoUrl, index) => {
+                            const isSelected = selected.includes(index);
+                            const selectionOrder = selected.indexOf(index) + 1;
+                            return (
+                                <div key={index} onClick={() => toggleSelection(index)} className={`relative cursor-pointer rounded-xl overflow-hidden aspect-[4/3] border-4 transition-all duration-200 ${isSelected ? 'border-pink-500 scale-[0.98] shadow-md' : 'border-transparent hover:border-gray-300'}`}>
+                                    <img src={photoUrl} className="w-full h-full object-cover" />
+                                    {isSelected && <div className="absolute top-2 right-2 bg-pink-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold text-lg shadow-sm">{selectionOrder}</div>}
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <button onClick={handleComplete} disabled={selected.length !== 4} className={`px-12 py-4 rounded-full text-2xl font-bold shadow-lg transition-all ${selected.length === 4 ? 'bg-pink-500 hover:bg-pink-600 text-white hover:-translate-y-1' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>선택 완료</button>
+                </div>
+            );
+        }
+
+        // --- Step 5: 출력 및 전송 분기 선택 ---
+        function ActionBranching({ onNext }) {
+            const [mainAction, setMainAction] = useState(null); 
+
+            return (
+                <div className="animate-fade-in text-center flex flex-col items-center py-8 print:hidden">
+                    <h2 className="text-3xl mb-10 font-bold text-gray-800">사진 선택 완료! <br/><span className="text-pink-500">어떻게 받아보시겠어요?</span></h2>
+                    {!mainAction ? (
+                        <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl justify-center">
+                            <button onClick={() => onNext('print')} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white p-10 rounded-3xl shadow-lg transition-transform hover:-translate-y-2 flex flex-col items-center">
+                                <i className="ph-fill ph-printer text-7xl mb-4"></i><h3 className="text-2xl font-bold">바로 출력하기</h3><p className="opacity-80 mt-2 text-lg">CP1500 프린터로 인쇄</p>
+                            </button>
+                            <button onClick={() => setMainAction('digital')} className="flex-1 bg-green-500 hover:bg-green-600 text-white p-10 rounded-3xl shadow-lg transition-transform hover:-translate-y-2 flex flex-col items-center">
+                                <i className="ph-fill ph-device-mobile text-7xl mb-4"></i><h3 className="text-2xl font-bold">스마트폰으로 받기</h3><p className="opacity-80 mt-2 text-lg">기기 저장 및 QR 다운로드</p>
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="w-full max-w-xl animate-fade-in">
+                            <button onClick={() => setMainAction(null)} className="text-gray-500 flex items-center mb-8 hover:text-pink-500 text-lg"><i className="ph-bold ph-arrow-left mr-2"></i> 뒤로가기</button>
+                            <h3 className="text-2xl font-bold mb-6 text-gray-700">어떤 방식으로 전송받을까요?</h3>
+                            <div className="flex flex-col gap-5">
+                                <button onClick={() => onNext('qr')} className="bg-white border-4 border-gray-100 hover:border-pink-400 text-gray-800 p-6 rounded-2xl text-2xl font-bold flex justify-center items-center shadow-md transition-all"><i className="ph-fill ph-qr-code text-4xl mr-3 text-pink-500"></i> 안내 QR 코드로 받기</button>
+                                <button onClick={() => onNext('kakao')} className="bg-[#FEE500] hover:bg-[#F4DC00] text-[#000000] p-6 rounded-2xl text-2xl font-bold flex justify-center items-center shadow-md transition-all"><i className="ph-fill ph-chat-circle text-4xl mr-3"></i> 카카오톡으로 받기 (안내)</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // --- Step 6: 🚀 물리적 인쇄 오차 완벽 보정 (Shift Up) 렌더링 엔진 ---
+        function FinalResult({ selectedPhotos, selectedFrame, layoutMode, deliveryMethod, onReset }) {
+            const [mergedImage, setMergedImage] = useState(null);
+            const [isGenerating, setIsGenerating] = useState(true);
+            const [downloadQrUrl, setDownloadQrUrl] = useState(''); 
+            const [uploadedLink, setUploadedLink] = useState(''); 
+            const [uploadStatus, setUploadStatus] = useState(''); 
+
+            useEffect(() => {
+                const drawCover = (ctx, img, x, y, w, h) => {
+                    const imgRatio = img.width / img.height;
+                    const slotRatio = w / h;
+                    let sx, sy, sWidth, sHeight;
+
+                    if (imgRatio > slotRatio) {
+                        sHeight = img.height; sWidth = img.height * slotRatio;
+                        sx = (img.width - sWidth) / 2; sy = 0;
+                    } else {
+                        sWidth = img.width; sHeight = img.width / slotRatio;
+                        sx = 0; sy = (img.height - sHeight) / 2;
+                    }
+                    ctx.drawImage(img, sx, sy, sWidth, sHeight, x, y, w, h);
+                };
+
+                const generateBaseCanvas = async () => {
+                    const ORIGINAL_W = layoutMode === '8cut' ? 1200 : 600;
+                    const ORIGINAL_H = 1800;
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = ORIGINAL_W;
+                    canvas.height = ORIGINAL_H;
+                    const ctx = canvas.getContext('2d');
+                    
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    const loadImg = (src) => new Promise((resolve) => {
+                        const img = new Image();
+                        if(src.startsWith('http')) img.crossOrigin = "anonymous";
+                        img.onload = () => resolve(img);
+                        img.onerror = () => {
+                            const errCanvas = document.createElement('canvas');
+                            errCanvas.width = 520; errCanvas.height = 400;
+                            const errCtx = errCanvas.getContext('2d');
+                            errCtx.fillStyle = '#ddd'; errCtx.fillRect(0,0,520,400);
+                            resolve(errCanvas);
+                        };
+                        img.src = src;
+                    });
+
+                    const photoImgs = await Promise.all(selectedPhotos.map(loadImg));
+                    const frameImg = await loadImg(selectedFrame);
+
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = ORIGINAL_W;
+                    tempCanvas.height = ORIGINAL_H;
+                    const tempCtx = tempCanvas.getContext('2d');
+
+                    const yPositions = [130, 540, 950, 1360];
+                    const targetW = 520; const targetH = 400;
+
+                    const drawStrip = (offsetX) => {
+                        photoImgs.forEach((img, i) => drawCover(tempCtx, img, offsetX + 40, yPositions[i], targetW, targetH));
+                        tempCtx.drawImage(frameImg, offsetX, 0, 600, 1800);
+                    };
+
+                    drawStrip(0);
+                    if (layoutMode === '8cut') drawStrip(600);
+
+                    // 💡 핵심 마법 로직: 프린터의 롤러 치우침 현상(아래로 쏠림) 물리적 보정
+                    const SCALE_X = 0.96; 
+                    const SCALE_Y = 0.92; 
+                    
+                    // 전체 사진 : 위치조정 10p로 미세 조정하여 완벽하게 정중앙에 안착시킵니다.
+                    const OFFSET_Y = -10;
+                    
+                    const scaledW = ORIGINAL_W * SCALE_X;
+                    const scaledH = ORIGINAL_H * SCALE_Y;
+                    const startX = (ORIGINAL_W - scaledW) / 2;
+                    const startY = ((ORIGINAL_H - scaledH) / 2) + OFFSET_Y;
+
+                    ctx.drawImage(tempCanvas, 0, 0, ORIGINAL_W, ORIGINAL_H, startX, startY, scaledW, scaledH);
+
+                    return canvas.toDataURL('image/jpeg', 0.95);
+                };
+
+                const uploadImageToServer = async (base64Data) => {
+                    let finalUrl = null;
+                    const pureBase64 = base64Data.split(',')[1];
+
+                    if (IMGBB_API_KEY && IMGBB_API_KEY !== 'YOUR_IMGBB_API_KEY_HERE') {
+                        try {
+                            const formData = new FormData(); formData.append('image', pureBase64);
+                            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+                            const data = await res.json();
+                            if (data.success) finalUrl = data.data.url;
+                        } catch(e) { console.log('ImgBB 사용자 키 실패'); }
+                    }
+
+                    if (!finalUrl) {
+                        try {
+                            const formData = new FormData(); formData.append('image', pureBase64); formData.append('type', 'base64');
+                            const res = await fetch('https://api.imgur.com/3/image', {
+                                method: 'POST', headers: { Authorization: 'Client-ID e72081f215d20c3' }, body: formData
+                            });
+                            const data = await res.json();
+                            if (data.success) finalUrl = data.data.link;
+                        } catch(e) { console.log('Imgur 기본 키 실패'); }
+                    }
+
+                    if (!finalUrl) {
+                        try {
+                            const blob = await (await fetch(base64Data)).blob();
+                            const formData = new FormData(); formData.append('file', blob, 'photo.png');
+                            const res = await fetch('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: formData });
+                            const data = await res.json();
+                            if (data.status === 'success') finalUrl = data.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+                        } catch(e) { console.log('Tmpfiles 실패'); }
+                    }
+
+                    return finalUrl;
+                };
+
+                const processFinalImage = async () => {
+                    setUploadStatus('사진을 합성하는 중입니다...');
+                    
+                    let finalDataUrl = await generateBaseCanvas();
+                    
+                    if (!finalDataUrl) {
+                        alert("이미지 생성에 실패했습니다.");
+                        setIsGenerating(false);
+                        return;
+                    }
+
+                    if (deliveryMethod === 'qr' || deliveryMethod === 'kakao' || deliveryMethod === 'print') {
+                        setUploadStatus('고화질 사진을 클라우드에 업로드 중입니다...');
+                        const uploadedUrl = await uploadImageToServer(finalDataUrl);
+
+                        if (uploadedUrl) {
+                            setUploadedLink(uploadedUrl);
+                            
+                            const downloadQr = await QRCode.toDataURL(uploadedUrl, { width: 300, margin: 2, errorCorrectionLevel: 'M' });
+                            setDownloadQrUrl(downloadQr);
+                            
+                            const miniQrDataUrl = await QRCode.toDataURL(uploadedUrl, { width: 90, margin: 1, errorCorrectionLevel: 'L' });
+                            
+                            const canvas = document.createElement('canvas');
+                            const ORIGINAL_W = layoutMode === '8cut' ? 1200 : 600;
+                            const ORIGINAL_H = 1800;
+                            canvas.width = ORIGINAL_W;
+                            canvas.height = ORIGINAL_H;
+                            const ctx = canvas.getContext('2d');
+                            
+                            const baseImg = new Image(); baseImg.src = finalDataUrl;
+                            const qrImg = new Image(); qrImg.src = miniQrDataUrl;
+                            
+                            await new Promise(r => baseImg.onload = r);
+                            await new Promise(r => qrImg.onload = r);
+                            
+                            ctx.drawImage(baseImg, 0, 0);
+                            
+                            // 💡 20px로 보정된 위치에 맞춰 QR 코드도 동일하게 그려줍니다.
+                            const SCALE_X = 0.96;
+                            const SCALE_Y = 0.92;
+                            const OFFSET_Y = -20; 
+                            const startX = (ORIGINAL_W - ORIGINAL_W * SCALE_X) / 2;
+                            const startY = ((ORIGINAL_H - ORIGINAL_H * SCALE_Y) / 2) + OFFSET_Y;
+                            const qrMargin = 20;
+                            const qrSize = 90;
+
+                            // 왼쪽 프레임 QR
+                            ctx.drawImage(qrImg, startX + qrMargin, startY + qrMargin, qrSize, qrSize);
+                            
+                            // 오른쪽 프레임 QR (8컷용)
+                            if (layoutMode === '8cut') {
+                                const rightFrameStartX = startX + (600 * SCALE_X);
+                                ctx.drawImage(qrImg, rightFrameStartX + qrMargin, startY + qrMargin, qrSize, qrSize); 
+                            }
+                            
+                            finalDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                        } else {
+                            console.error("모든 서버 업로드 실패");
+                            setDownloadQrUrl(null);
+                        }
+                    }
+
+                    setMergedImage(finalDataUrl);
+                    setIsGenerating(false);
+
+                    if (deliveryMethod === 'print') {
+                        setTimeout(() => window.print(), 500);
+                    }
+                };
+
+                if (deliveryMethod) processFinalImage();
+            }, [deliveryMethod, layoutMode, selectedFrame, selectedPhotos]);
+
+            const handleLocalDownload = () => {
+                if (!mergedImage) return;
+                fetch(mergedImage)
+                    .then(res => res.blob())
+                    .then(blob => {
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.href = blobUrl;
+                        link.download = `shinseong_photo_${Date.now()}.jpg`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+                    })
+                    .catch(err => {
+                        const link = document.createElement("a");
+                        link.href = mergedImage;
+                        link.download = `shinseong_photo_${Date.now()}.jpg`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    });
+            };
+
+            return (
+                <>
+                    <div className="animate-fade-in text-center flex flex-col items-center py-4 print:hidden">
+                        <h2 className="text-3xl mb-4 text-pink-500 font-bold">인생네컷 완성! 🎉</h2>
+                        
+                        {isGenerating ? (
+                            <div className="flex flex-col items-center justify-center h-[500px]">
+                                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-pink-500 mb-6"></div>
+                                <p className="text-2xl font-bold text-gray-700">{uploadStatus}</p>
+                            </div>
+                        ) : (
+                            <div className="w-full max-w-5xl flex flex-col md:flex-row gap-8 items-center md:items-start justify-center">
+                                
+                                <div className="relative shadow-2xl border-4 border-gray-100 rounded-xl flex-shrink-0 bg-white p-3 flex justify-center items-center">
+                                    <img src={mergedImage} alt="Final Result" className="max-h-[50vh] md:max-h-[65vh] w-auto object-contain drop-shadow-md" />
+                                </div>
+
+                                <div className="flex flex-col gap-4 w-full max-w-sm justify-center h-full mt-4 md:mt-10">
+                                    {deliveryMethod === 'print' && (
+                                        <div className="bg-blue-50 p-6 rounded-3xl border-2 border-blue-100 flex flex-col items-center animate-fade-in shadow-md">
+                                            <i className="ph-fill ph-printer text-6xl text-blue-500 mb-4"></i>
+                                            <h3 className="text-2xl font-bold text-gray-800 mb-2">출력 진행 중!</h3>
+                                            
+                                            <button onClick={() => window.print()} className="bg-blue-500 hover:bg-blue-600 text-white w-full py-4 rounded-full text-xl font-bold mb-3 shadow-md transition-transform hover:-translate-y-1">
+                                                <i className="ph-bold ph-printer mr-2"></i> 다시 인쇄하기
+                                            </button>
+                                            <button onClick={onReset} className="bg-gray-800 hover:bg-gray-900 text-white w-full py-4 rounded-full text-xl font-bold shadow-md transition-transform hover:-translate-y-1">
+                                                <i className="ph-bold ph-house mr-2"></i> 처음으로 돌아가기
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {deliveryMethod === 'qr' && (
+                                        <div className="bg-white p-6 rounded-3xl border-2 border-gray-100 flex flex-col items-center animate-fade-in shadow-xl">
+                                            <h3 className="text-xl font-bold mb-4">스마트폰으로 스캔하세요!</h3>
+                                            {downloadQrUrl ? (
+                                                <div className="flex flex-col items-center w-full">
+                                                    <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-200 mb-4">
+                                                        <img src={downloadQrUrl} className="w-48 h-48 object-contain" />
+                                                    </div>
+                                                    
+                                                    <div className="w-full bg-gray-50 p-3 rounded-lg mb-4 text-center">
+                                                        <p className="text-xs text-gray-500 mb-1">스캔이 안된다면 아래 링크를 클릭하세요</p>
+                                                        <a href={uploadedLink} target="_blank" rel="noreferrer" className="text-blue-500 text-sm font-bold underline break-all font-sans">
+                                                            {uploadedLink}
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="w-48 h-48 mb-6 bg-gray-100 flex flex-col items-center justify-center rounded-lg">
+                                                    <i className="ph-fill ph-warning-circle text-4xl text-red-400 mb-2"></i>
+                                                    <span className="text-gray-500 text-sm font-bold">QR 생성 실패</span>
+                                                    <span className="text-gray-400 text-xs mt-1">서버 업로드 오류</span>
+                                                </div>
+                                            )}
+                                            <p className="text-xs text-gray-400 mb-4 text-center break-keep">
+                                                {downloadQrUrl 
+                                                    ? "스캔 시 폰으로 사진을 저장할 수 있습니다.\n(사진에 찍힌 작은 QR과 동일한 링크입니다)" 
+                                                    : "클라우드 서버 오류입니다. 아래 버튼을 눌러\n이 컴퓨터 기기에 먼저 파일로 저장해주세요."}
+                                            </p>
+                                            
+                                            <button onClick={handleLocalDownload} className={`bg-gray-200 text-gray-700 hover:bg-gray-300 w-full py-3 rounded-full text-lg font-bold flex justify-center items-center mb-2 transition-transform hover:-translate-y-1`}>
+                                                이 컴퓨터에 바로 파일 다운로드
+                                            </button>
+                                            <button onClick={onReset} className="bg-gray-800 hover:bg-gray-900 text-white w-full py-3 rounded-full text-lg font-bold transition-transform hover:-translate-y-1">처음으로 돌아가기</button>
+                                        </div>
+                                    )}
+
+                                    {deliveryMethod === 'kakao' && (
+                                        <div className="bg-white p-6 rounded-3xl border-2 border-gray-100 flex flex-col items-center animate-fade-in shadow-xl">
+                                            <div className="w-20 h-20 bg-[#FEE500] rounded-full flex items-center justify-center mb-6 shadow-sm"><i className="ph-fill ph-chat-circle text-4xl text-black"></i></div>
+                                            <h3 className="text-xl font-bold mb-2">사진 저장 후 공유하기</h3>
+                                            <p className="text-sm text-gray-500 mb-4 text-center">아래 버튼으로 기기에 이미지를 다운로드한 후,<br/>카카오톡을 열어 친구에게 전송해보세요.</p>
+                                            
+                                            <button onClick={handleLocalDownload} className={`bg-[#FEE500] text-black hover:bg-[#F4DC00] w-full py-4 rounded-full text-xl font-bold flex justify-center items-center shadow-md mb-2 transition-transform hover:-translate-y-1`}>
+                                                <i className="ph-bold ph-download-simple mr-2"></i> 사진 다운로드 (.jpg)
+                                            </button>
+                                            <button onClick={onReset} className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-full py-4 rounded-full text-xl font-bold transition-transform hover:-translate-y-1">처음으로 돌아가기</button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 🔥 포탈(Portal)을 이용해 인쇄 시 화면의 모든 DOM을 뚫고 최상단 body에 프린트 영역만 생성! */}
+                    {mergedImage && ReactDOM.createPortal(
+                        <div id="print-area">
+                            <img src={mergedImage} alt="Print" />
+                        </div>,
+                        document.body
+                    )}
+                </>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
-  </body>
+</body>
 </html>
