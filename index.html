@@ -128,12 +128,12 @@
             { id: 'f1', name: '가나가나디디 프레임', url: './frame/가나가나디디 프레임.png' },
             { id: 'f2', name: '곰돌이 프레임', url: './frame/곰돌이 프레임.png' },
             { id: 'f3', name: '다마고치 프레임', url: './frame/다마고치 프레임.png' },
-            { id: 'f4', name: '도둑 프레임', url: './frame/미쿠 프레임.png' },
+            { id: 'f4', name: '미쿠 프레임', url: './frame/미쿠 프레임.png' },
             { id: 'f5', name: '도비는 과연 자유일까 프레임', url: './frame/도비는 과연 자유일까 프레임.png' },
             { id: 'f6', name: '라이즈 원빈 프레임', url: './frame/라이즈 원빈 프레임.png' },
             { id: 'f7', name: '리락쿠마 프레임', url: './frame/리락쿠마 프레임.png' },
             { id: 'f8', name: '마루는강쥐 프레임', url: './frame/마루는강쥐 프레임.png' },
-            { id: 'f9', name: '미소녀_프레임', url: './frame/미소녀_프레임.png' },
+            { id: 'f9', name: '미소녀_프레임', url: './frame/미소녀_프레임.webp' },
             { id: 'f10', name: '미쿠 프레임', url: './frame/미쿠 프레임.png' },
             { id: 'f11', name: '벛꽃 프레임', url: './frame/벛꽃 프레임.png' },
             { id: 'f12', name: '빤쮸토끼 프레임', url: './frame/빤쮸토끼 프레임.png' },
@@ -188,6 +188,7 @@
                         )}
                         {step === 'camera' && (
                             <CameraBooth 
+                                layoutMode={layoutMode}
                                 onFinish={(capturedPhotos) => { 
                                     setPhotos(capturedPhotos); 
                                     setStep('select'); 
@@ -196,6 +197,7 @@
                         )}
                         {step === 'select' && (
                             <PhotoSelection 
+                                layoutMode={layoutMode}
                                 photos={photos} 
                                 onComplete={(selected) => { setSelectedPhotos(selected); setStep('branch'); }} 
                             />
@@ -329,7 +331,7 @@
         }
 
         // --- Step 3: 카메라 촬영 (🚀 오류 메시지 상세화 및 다시 시도 기능 최적화) ---
-        function CameraBooth({ onFinish }) {
+        function CameraBooth({ layoutMode, onFinish }) {
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
             const streamRef = useRef(null); // 스트림을 ref로 관리하여 안전하게 해제
@@ -448,6 +450,11 @@
                 onFinish(dummyPhotos);
             };
 
+            // 💡 4컷형일 경우 카메라 화면을 세로 비율(560:810)로 길게 변경합니다.
+            const boothStyle = layoutMode === '4cut' 
+                ? { aspectRatio: '56 / 81', height: '55vh', maxWidth: '100%' } 
+                : { aspectRatio: '16 / 9', maxHeight: '60vh', width: 'auto' };
+
             return (
                 <div className={`relative animate-fade-in ${flash ? 'camera-flash' : ''} py-4 print:hidden`}>
                     <div className="text-center mb-4">
@@ -457,7 +464,7 @@
                         {isShooting && !cameraError && <p className="text-pink-500 font-medium mt-1">화면을 클릭하면 바로 찍힙니다!</p>}
                     </div>
                     
-                    <div className={`relative rounded-2xl overflow-hidden bg-black aspect-video flex justify-center items-center shadow-inner max-h-[60vh] w-auto mx-auto ${!cameraError ? 'cursor-pointer' : ''}`} onClick={(!cameraError && isShooting) ? handleCapture : undefined}>
+                    <div className={`relative rounded-2xl overflow-hidden bg-black flex justify-center items-center shadow-inner mx-auto ${!cameraError ? 'cursor-pointer' : ''}`} style={boothStyle} onClick={(!cameraError && isShooting) ? handleCapture : undefined}>
                         {cameraError ? (
                             <div className="text-white text-center p-6 flex flex-col items-center w-full h-full justify-center">
                                 <i className="ph-fill ph-warning-circle text-6xl text-red-500 mb-4 animate-bounce"></i>
@@ -499,7 +506,7 @@
         }
 
         // --- Step 4: 사진 선택 ---
-        function PhotoSelection({ photos, onComplete }) {
+        function PhotoSelection({ layoutMode, photos, onComplete }) {
             const [selected, setSelected] = useState([]);
 
             const toggleSelection = (index) => {
@@ -511,6 +518,9 @@
                 if (selected.length === 4) onComplete(selected.map(i => photos[i]));
             };
 
+            // 💡 4컷형일 경우 썸네일 화면을 세로 비율(560:810)로 길게 보여줍니다.
+            const aspectClass = layoutMode === '4cut' ? 'aspect-[56/81]' : 'aspect-[4/3]';
+
             return (
                 <div className="animate-fade-in text-center py-4 print:hidden">
                     <h2 className="text-3xl mb-2">가장 마음에 드는 4장을 골라주세요!</h2>
@@ -521,7 +531,7 @@
                             const isSelected = selected.includes(index);
                             const selectionOrder = selected.indexOf(index) + 1;
                             return (
-                                <div key={index} onClick={() => toggleSelection(index)} className={`relative cursor-pointer rounded-xl overflow-hidden aspect-[4/3] border-4 transition-all duration-200 ${isSelected ? 'border-pink-500 scale-[0.98] shadow-md' : 'border-transparent hover:border-gray-300'}`}>
+                                <div key={index} onClick={() => toggleSelection(index)} className={`relative cursor-pointer rounded-xl overflow-hidden ${aspectClass} border-4 transition-all duration-200 ${isSelected ? 'border-pink-500 scale-[0.98] shadow-md' : 'border-transparent hover:border-gray-300'}`}>
                                     <img src={photoUrl} className="w-full h-full object-cover" />
                                     {isSelected && <div className="absolute top-2 right-2 bg-pink-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold text-lg shadow-sm">{selectionOrder}</div>}
                                 </div>
@@ -655,7 +665,7 @@
                     // 💡 핵심 마법 로직: 프린터의 롤러 치우침 현상(아래로 쏠림) 및 짤림 방어 공통 적용
                     const SCALE_X = 0.96; 
                     const SCALE_Y = 0.93; 
-                    const OFFSET_Y = -5; // 10px에서 다시 20px로 수정
+                    const OFFSET_Y = -5;
                     
                     const scaledW = ORIGINAL_W * SCALE_X;
                     const scaledH = ORIGINAL_H * SCALE_Y;
