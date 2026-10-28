@@ -786,13 +786,17 @@
                         }
                     }
 
-                    // 🌟 CP1500 Japan Postcard (100x148mm) 위·아래 점선(절취선) 잘림 방지 보정
-                    // 상단 점선 여유(38px) 및 하단 점선 여유(52px)를 두어 상하 테두리·하단 문구·QR코드가 절취선 안쪽에 100% 들어오도록 보정
+                    // 🌟 CP1500 Japan Postcard (100x148mm) 상하좌우 미세 보정
+                    // - 위쪽 흰 여백 제거: TOP_SAFE_PAD를 38px → 14px로 축소하여 위로 밀착
+                    // - 아래쪽 점선 맞춤 유지: BOTTOM_SAFE_PAD = 48px
+                    // - 왼쪽 테두리 잘림 보정: LEFT_SAFE_PAD = 22px 추가하여 왼쪽 프레임을 안쪽으로 이동
                     {
                         const ORIGINAL_W = 1200;
                         const ORIGINAL_H = 1800;
-                        const TOP_SAFE_PAD = 38;
-                        const BOTTOM_SAFE_PAD = 52;
+                        const TOP_SAFE_PAD = 14;
+                        const BOTTOM_SAFE_PAD = 48;
+                        const LEFT_SAFE_PAD = 22;
+                        const RIGHT_SAFE_PAD = 0;
 
                         const safeCanvas = document.createElement('canvas');
                         safeCanvas.width = ORIGINAL_W;
@@ -806,8 +810,9 @@
                         srcImg.src = finalDataUrl;
                         await new Promise(r => srcImg.onload = r);
 
+                        const targetW = ORIGINAL_W - LEFT_SAFE_PAD - RIGHT_SAFE_PAD;
                         const targetH = ORIGINAL_H - TOP_SAFE_PAD - BOTTOM_SAFE_PAD;
-                        safeCtx.drawImage(srcImg, 0, TOP_SAFE_PAD, ORIGINAL_W, targetH);
+                        safeCtx.drawImage(srcImg, LEFT_SAFE_PAD, TOP_SAFE_PAD, targetW, targetH);
 
                         finalDataUrl = safeCanvas.toDataURL('image/jpeg', 0.95);
                     }
