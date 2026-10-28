@@ -28,7 +28,7 @@
             user-select: none;
         }
 
-        /* 🚀 인쇄 전용 CSS (2장 출력 및 여백 버그 완전 해결) */
+        /* 🚀 인쇄 전용 CSS (무여백 4x6 CP1500 최적화) */
         #print-area {
             display: none;
         }
@@ -47,7 +47,7 @@
                 padding: 0 !important;
                 width: 100% !important;
                 height: 100% !important;
-                background-color: white !important;
+                background-color: transparent !important;
                 overflow: hidden !important;
             }
 
@@ -56,24 +56,24 @@
                 display: none !important;
             }
 
-            /* 인쇄 영역 활성화 (정확히 화면 100% 고정) */
+            /* 인쇄 영역 활성화 (인쇄 페이지 100% 꽉 채우기) */
             body>#print-area {
                 display: block !important;
-                position: absolute !important;
+                position: fixed !important;
                 top: 0 !important;
                 left: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
+                width: 100vw !important;
+                height: 100vh !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                background-color: white !important;
+                background-color: transparent !important;
                 z-index: 999999 !important;
             }
 
             #print-area img {
                 width: 100% !important;
                 height: 100% !important;
-                object-fit: cover !important;
+                object-fit: fill !important;
                 display: block !important;
                 margin: 0 !important;
                 padding: 0 !important;
@@ -680,17 +680,8 @@
                         tempCtx.drawImage(frameImg, 0, 0, ORIGINAL_W, ORIGINAL_H);
                     }
 
-                    // 💡 핵심 마법 로직: 프린터의 롤러 치우침 현상(아래로 쏠림) 및 짤림 방어 공통 적용
-                    const SCALE_X = 0.96;
-                    const SCALE_Y = 0.93;
-                    const OFFSET_Y = -5;
-
-                    const scaledW = ORIGINAL_W * SCALE_X;
-                    const scaledH = ORIGINAL_H * SCALE_Y;
-                    const startX = (ORIGINAL_W - scaledW) / 2;
-                    const startY = ((ORIGINAL_H - scaledH) / 2) + OFFSET_Y;
-
-                    ctx.drawImage(tempCanvas, 0, 0, ORIGINAL_W, ORIGINAL_H, startX, startY, scaledW, scaledH);
+                    // 🌟 무여백(Borderless) 풀블리드 인쇄: 인위적인 축소와 테두리 흰 여백을 완전히 제거하여 1200x1800 캔버스 100% 꽉 채움
+                    ctx.drawImage(tempCanvas, 0, 0, ORIGINAL_W, ORIGINAL_H);
 
                     return canvas.toDataURL('image/jpeg', 0.95);
                 };
@@ -770,29 +761,21 @@
 
                             ctx.drawImage(baseImg, 0, 0);
 
-                            // 💡 QR 코드도 동일한 보정값 적용 (합성된 원본 이미지 비율과 동일하게 싱크)
-                            const SCALE_X = 0.96;
-                            const SCALE_Y = 0.93;
-                            const OFFSET_Y = -5;
-                            const startX = (ORIGINAL_W - ORIGINAL_W * SCALE_X) / 2;
-                            const startY = ((ORIGINAL_H - ORIGINAL_H * SCALE_Y) / 2) + OFFSET_Y;
-
+                            // 🌟 무여백 기준 QR 코드 배치 (1200x1800 1:1 풀사이즈 규격)
                             if (layoutMode === '8cut') {
-                                const qrMargin = 20;
+                                const qrMargin = 24;
                                 const qrSize = 90;
-                                // 왼쪽 프레임 QR
-                                ctx.drawImage(qrImg, startX + qrMargin, startY + qrMargin, qrSize, qrSize);
-                                // 오른쪽 프레임 QR (8컷용)
-                                const rightFrameStartX = startX + (600 * SCALE_X);
-                                ctx.drawImage(qrImg, rightFrameStartX + qrMargin, startY + qrMargin, qrSize, qrSize);
+                                // 왼쪽 프레임 상단 QR
+                                ctx.drawImage(qrImg, qrMargin, qrMargin, qrSize, qrSize);
+                                // 오른쪽 프레임 상단 QR (600px 오프셋)
+                                ctx.drawImage(qrImg, 600 + qrMargin, qrMargin, qrSize, qrSize);
                             } else if (layoutMode === '4cut') {
-                                // 🌟 4컷형은 사진을 가리지 않게 우측 하단 여백 쪽에 QR 1개 삽입
-                                // 크기를 줄이고(70px) 여백을 늘려(35px) 삐져나오지 않도록 재배치 완료
-                                const qrSize = 70;
+                                // 🌟 4컷형은 사진을 가리지 않게 우측 하단 프레임 여백(y: 1680~1800)에 QR 삽입
+                                const qrSize = 75;
                                 const qrMarginRight = 35;
-                                const qrMarginBottom = 35;
-                                const qrX = startX + (ORIGINAL_W * SCALE_X) - qrSize - qrMarginRight;
-                                const qrY = startY + (ORIGINAL_H * SCALE_Y) - qrSize - qrMarginBottom;
+                                const qrMarginBottom = 25;
+                                const qrX = ORIGINAL_W - qrSize - qrMarginRight;
+                                const qrY = ORIGINAL_H - qrSize - qrMarginBottom;
                                 ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
                             }
 
@@ -861,15 +844,15 @@
                                             <i className="ph-fill ph-printer text-6xl text-blue-500 mb-4"></i>
                                             <h3 className="text-2xl font-bold text-gray-800 mb-2">출력 진행 중!</h3>
 
-                                            <div className="bg-yellow-50 border border-yellow-300 p-4 rounded-xl text-left mb-6 w-full shadow-inner">
-                                                <p className="text-yellow-700 font-bold mb-2 text-sm flex items-center">
-                                                    <i className="ph-fill ph-warning-circle text-lg mr-1"></i>
-                                                    마지막 테스트 인쇄 안내!
+                                            <div className="bg-emerald-50 border border-emerald-300 p-4 rounded-xl text-left mb-6 w-full shadow-inner">
+                                                <p className="text-emerald-800 font-bold mb-2 text-sm flex items-center">
+                                                    <i className="ph-fill ph-check-circle text-lg mr-1"></i>
+                                                    무여백(여백 없음) 4x6 인쇄 최적화 완료!
                                                 </p>
                                                 <ul className="text-[13px] text-gray-700 space-y-2 list-disc pl-5 break-keep">
-                                                    <li>절취선에 인쇄되는 현상을 막기위해 사진 위아래에 하얀 여백을 크게 넣어뒀습니다.</li>
-                                                    <li><span className="font-bold text-red-500">현재 프린터 설정(여백 없이 인쇄: 켬)을 그대로 유지</span>하신 채로 바로 인쇄해 보세요!</li>
-                                                    <li>이제는 프린터가 여백만 깎아먹으면서 절취선 안에 그림이 예쁘게 들어갈 것입니다.</li>
+                                                    <li>사진 결과물에 흰 테두리 여백이 생기지 않도록 <strong>1200 x 1800 풀사이즈(Full Bleed)</strong>로 변경되었습니다.</li>
+                                                    <li><span className="font-bold text-emerald-700">1. 브라우저 인쇄 설정:</span> 여백을 <span className="font-bold text-red-600">'없음 (None)'</span>, 배율은 <span className="font-bold text-blue-600">'100%'</span>(또는 맞춤)으로 설정해주세요.</li>
+                                                    <li><span className="font-bold text-emerald-700">2. CP1500 프린터 설정:</span> [인쇄 기본 설정] → [고급] → <span className="font-bold text-blue-600">'여백 없이 인쇄 : 켬'</span> 상태로 출력하시면 테두리 없이 인화지에 꽉 차게 나옵니다!</li>
                                                 </ul>
                                             </div>
 
