@@ -650,6 +650,24 @@
                     tempCanvas.height = ORIGINAL_H;
                     const tempCtx = tempCanvas.getContext('2d');
 
+                    // 🌟 프레임 이미지 외곽 그림자(Figma export 여백) 자동 제거 헬퍼 (브라우저 캐시 대비)
+                    const drawNormalizedFrame = (targetCtx, img, destX, destY, expectedW, expectedH) => {
+                        let sx = 0, sy = 0, sw = img.width, sh = img.height;
+                        if (sw > expectedW || sh > expectedH) {
+                            if (expectedW === 1200 && sw === 1252 && sh === 1852) { sx = 26; sy = 26; sw = 1200; sh = 1800; }
+                            else if (expectedW === 1200 && sw === 1208 && sh === 1808) { sx = 4; sy = 0; sw = 1200; sh = 1800; }
+                            else if (expectedW === 600 && sw === 608 && sh === 1808) { sx = 4; sy = 0; sw = 600; sh = 1800; }
+                            else if (expectedW === 600 && sw === 705 && sh === 1824) { sx = 43; sy = 16; sw = 600; sh = 1800; }
+                            else {
+                                sx = Math.round((sw - expectedW) / 2);
+                                sy = Math.round((sh - expectedH) / 2);
+                                sw = expectedW;
+                                sh = expectedH;
+                            }
+                        }
+                        targetCtx.drawImage(img, sx, sy, sw, sh, destX, destY, expectedW, expectedH);
+                    };
+
                     if (layoutMode === '8cut') {
                         // 기존 8컷형 로직 유지
                         const yPositions = [130, 540, 950, 1360];
@@ -657,7 +675,7 @@
 
                         const drawStrip = (offsetX) => {
                             photoImgs.forEach((img, i) => drawCover(tempCtx, img, offsetX + 40, yPositions[i], targetW, targetH));
-                            tempCtx.drawImage(frameImg, offsetX, 0, 600, 1800);
+                            drawNormalizedFrame(tempCtx, frameImg, offsetX, 0, 600, 1800);
                         };
 
                         drawStrip(0);
@@ -676,8 +694,8 @@
                         photoImgs.forEach((img, i) => {
                             drawCover(tempCtx, img, positions[i].x, positions[i].y, targetW, targetH);
                         });
-                        // 프레임 렌더링 (1200x1800 전체 덮기)
-                        tempCtx.drawImage(frameImg, 0, 0, ORIGINAL_W, ORIGINAL_H);
+                        // 프레임 렌더링 (1200x1800 정규화 덮기)
+                        drawNormalizedFrame(tempCtx, frameImg, 0, 0, ORIGINAL_W, ORIGINAL_H);
                     }
 
                     // 🌟 무여백(Borderless) 풀블리드 인쇄: 인위적인 축소와 테두리 흰 여백을 완전히 제거하여 1200x1800 캔버스 100% 꽉 채움
@@ -786,17 +804,15 @@
                         }
                     }
 
-                    // 🌟 CP1500 Japan Postcard (100x148mm) 상하좌우 미세 보정
-                    // - 위쪽 흰 여백 제거: TOP_SAFE_PAD를 38px → 14px로 축소하여 위로 밀착
-                    // - 아래쪽 점선 맞춤 유지: BOTTOM_SAFE_PAD = 48px
-                    // - 왼쪽 테두리 잘림 보정: LEFT_SAFE_PAD = 22px 추가하여 왼쪽 프레임을 안쪽으로 이동
+                    // 🌟 CP1500 Japan Postcard (100x148mm) 모든 프레임 공통 상하좌우 절취선/용지 경계 보정
+                    // 모든 프레임을 순수 1200x1800 규격으로 통일한 뒤, CP1500 실측 인쇄 경계(상단 42px, 하단 72px, 좌측 34px, 우측 30px)에 정확히 맞춤
                     {
                         const ORIGINAL_W = 1200;
                         const ORIGINAL_H = 1800;
-                        const TOP_SAFE_PAD = 14;
-                        const BOTTOM_SAFE_PAD = 48;
-                        const LEFT_SAFE_PAD = 22;
-                        const RIGHT_SAFE_PAD = 0;
+                        const TOP_SAFE_PAD = 42;
+                        const BOTTOM_SAFE_PAD = 72;
+                        const LEFT_SAFE_PAD = 34;
+                        const RIGHT_SAFE_PAD = 30;
 
                         const safeCanvas = document.createElement('canvas');
                         safeCanvas.width = ORIGINAL_W;
