@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,6 +20,7 @@
     <style>
         /* 웹 폰트 설정 */
         @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
         body {
             font-family: 'Jua', sans-serif;
             background-color: #f3f4f6;
@@ -32,27 +34,30 @@
         }
 
         @media print {
-            @page { 
-                size: 4in 6in; /* CP1500 4x6 인화지 규격 */
-                margin: 0 !important; /* 브라우저 여백 제거 */
+            @page {
+                size: 4in 6in;
+                /* CP1500 4x6 인화지 규격 */
+                margin: 0 !important;
+                /* 브라우저 여백 제거 */
             }
 
-            html, body {
-                margin: 0 !important; 
-                padding: 0 !important; 
+            html,
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
                 width: 100% !important;
                 height: 100% !important;
-                background-color: white !important; 
+                background-color: white !important;
                 overflow: hidden !important;
             }
-            
+
             /* 화면의 숨겨진 잔여 요소들(script 포함)이 2장을 만들지 않도록 print-area 빼고 모두 100% 강제 숨김 */
-            body > * {
+            body>* {
                 display: none !important;
             }
-            
+
             /* 인쇄 영역 활성화 (정확히 화면 100% 고정) */
-            body > #print-area {
+            body>#print-area {
                 display: block !important;
                 position: absolute !important;
                 top: 0 !important;
@@ -68,47 +73,59 @@
             #print-area img {
                 width: 100% !important;
                 height: 100% !important;
-                object-fit: cover !important; 
+                object-fit: cover !important;
                 display: block !important;
                 margin: 0 !important;
                 padding: 0 !important;
             }
         }
 
-        .camera-flash { animation: flash 0.5s ease-out; }
+        .camera-flash {
+            animation: flash 0.5s ease-out;
+        }
+
         @keyframes flash {
-            0% { background-color: rgba(255,255,255,1); }
-            100% { background-color: rgba(255,255,255,0); }
+            0% {
+                background-color: rgba(255, 255, 255, 1);
+            }
+
+            100% {
+                background-color: rgba(255, 255, 255, 0);
+            }
         }
 
         /* 커스텀 스크롤바 */
         .custom-scrollbar::-webkit-scrollbar {
             width: 10px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1; 
+            background: #f1f1f1;
             border-radius: 10px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #fbcfe8; 
+            background: #fbcfe8;
             border-radius: 10px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #f472b6; 
+            background: #f472b6;
         }
 
         .bg-checker {
             background-color: #f0f0f0;
-            background-image: 
-                linear-gradient(45deg, #ccc 25%, transparent 25%), 
-                linear-gradient(-45deg, #ccc 25%, transparent 25%), 
-                linear-gradient(45deg, transparent 75%, #ccc 75%), 
+            background-image:
+                linear-gradient(45deg, #ccc 25%, transparent 25%),
+                linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #ccc 75%),
                 linear-gradient(-45deg, transparent 75%, #ccc 75%);
             background-size: 20px 20px;
             background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
         }
     </style>
 </head>
+
 <body>
     <div id="root"></div>
 
@@ -116,10 +133,11 @@
         const { useState, useEffect, useRef, useCallback } = React;
 
         // 사용자 발급 ImgBB API 키
-        const IMGBB_API_KEY = '5bdcd8d19401614d3465c5c0831e74cf'; 
+        const IMGBB_API_KEY = '5bdcd8d19401614d3465c5c0831e74cf';
 
         // 🌟 4컷형 프레임 리스트 업데이트
         const FRAME_LIST_4CUT = [
+            { id: '4c_0', name: '별빛 네컷', url: './frame/4cut-frame/4컷형 별빛 네컷.png' },
             { id: '4c_1', name: '4컷형 기본-블랙', url: './frame/4cut-frame/4컷형 기본-블랙.png' },
             { id: '4c_2', name: '4컷형 기본-화이트', url: './frame/4cut-frame/4컷형 기본-화이트.png' },
         ];
@@ -152,12 +170,12 @@
 
         function App() {
             const [step, setStep] = useState('layout');
-            const [layoutMode, setLayoutMode] = useState('4cut'); 
+            const [layoutMode, setLayoutMode] = useState('4cut');
             const [selectedFrame, setSelectedFrame] = useState(null);
-            
-            const [photos, setPhotos] = useState([]); 
-            const [selectedPhotos, setSelectedPhotos] = useState([]); 
-            const [deliveryMethod, setDeliveryMethod] = useState(null); 
+
+            const [photos, setPhotos] = useState([]);
+            const [selectedPhotos, setSelectedPhotos] = useState([]);
+            const [deliveryMethod, setDeliveryMethod] = useState(null);
 
             const resetBooth = () => {
                 setStep('layout');
@@ -180,36 +198,36 @@
                             <LayoutSelection onNext={(mode) => { setLayoutMode(mode); setStep('frame'); }} />
                         )}
                         {step === 'frame' && (
-                            <FrameSelection 
-                                layoutMode={layoutMode} 
-                                onNext={(frame) => { setSelectedFrame(frame); setStep('camera'); }} 
-                                onBack={() => setStep('layout')} 
+                            <FrameSelection
+                                layoutMode={layoutMode}
+                                onNext={(frame) => { setSelectedFrame(frame); setStep('camera'); }}
+                                onBack={() => setStep('layout')}
                             />
                         )}
                         {step === 'camera' && (
-                            <CameraBooth 
+                            <CameraBooth
                                 layoutMode={layoutMode}
-                                onFinish={(capturedPhotos) => { 
-                                    setPhotos(capturedPhotos); 
-                                    setStep('select'); 
-                                }} 
+                                onFinish={(capturedPhotos) => {
+                                    setPhotos(capturedPhotos);
+                                    setStep('select');
+                                }}
                             />
                         )}
                         {step === 'select' && (
-                            <PhotoSelection 
+                            <PhotoSelection
                                 layoutMode={layoutMode}
-                                photos={photos} 
-                                onComplete={(selected) => { setSelectedPhotos(selected); setStep('branch'); }} 
+                                photos={photos}
+                                onComplete={(selected) => { setSelectedPhotos(selected); setStep('branch'); }}
                             />
                         )}
                         {step === 'branch' && (
-                            <ActionBranching 
-                                onNext={(method) => { setDeliveryMethod(method); setStep('result'); }} 
+                            <ActionBranching
+                                onNext={(method) => { setDeliveryMethod(method); setStep('result'); }}
                             />
                         )}
                         {step === 'result' && (
-                            <FinalResult 
-                                selectedPhotos={selectedPhotos} 
+                            <FinalResult
+                                selectedPhotos={selectedPhotos}
                                 selectedFrame={selectedFrame}
                                 layoutMode={layoutMode}
                                 deliveryMethod={deliveryMethod}
@@ -230,12 +248,12 @@
                         <button onClick={() => onNext('4cut')} className="flex-1 border-4 border-gray-200 hover:border-pink-400 rounded-2xl p-10 transition-all hover:-translate-y-2 group bg-gray-50">
                             <i className="ph ph-rectangles-three text-6xl text-gray-400 group-hover:text-pink-400 mb-4"></i>
                             <h3 className="text-2xl font-bold mb-2">4컷형 (기본)</h3>
-                            <p className="text-gray-500">큼직한 2x2 4컷 사진 1장이 출력됩니다.<br/>(1200 x 1800)</p>
+                            <p className="text-gray-500">큼직한 2x2 4컷 사진 1장이 출력됩니다.<br />(1200 x 1800)</p>
                         </button>
                         <button onClick={() => onNext('8cut')} className="flex-1 border-4 border-gray-200 hover:border-pink-400 rounded-2xl p-10 transition-all hover:-translate-y-2 group bg-gray-50">
                             <i className="ph ph-copy text-6xl text-gray-400 group-hover:text-pink-400 mb-4"></i>
                             <h3 className="text-2xl font-bold mb-2">8컷형 (나눔용)</h3>
-                            <p className="text-gray-500">4컷 사진 2장이 한 장에 나란히 인쇄됩니다.<br/>(1200 x 1800)</p>
+                            <p className="text-gray-500">4컷 사진 2장이 한 장에 나란히 인쇄됩니다.<br />(1200 x 1800)</p>
                         </button>
                     </div>
                 </div>
@@ -246,8 +264,8 @@
         function FrameSelection({ layoutMode, onNext, onBack }) {
             const [searchTerm, setSearchTerm] = useState('');
             const [currentPage, setCurrentPage] = useState(1);
-            const ITEMS_PER_PAGE = 4; 
-            
+            const ITEMS_PER_PAGE = 4;
+
             useEffect(() => {
                 setCurrentPage(1);
             }, [searchTerm]);
@@ -275,19 +293,19 @@
                             <i className="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
                         </div>
                     </div>
-                    
+
                     <div className="flex-1 flex flex-col justify-between">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 p-2">
                             {currentFrames.length > 0 ? currentFrames.map((frame) => (
                                 <div key={frame.id} onClick={() => onNext(frame.url)} className="cursor-pointer border-4 border-transparent hover:border-pink-400 rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all flex flex-col bg-white hover:-translate-y-1 group">
                                     <div className="w-full h-[50vh] bg-checker flex justify-center items-center p-2 md:p-4">
-                                        <img 
-                                            src={frame.url} 
-                                            alt={frame.name} 
-                                            className="max-w-full max-h-full object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-[1.02]" 
-                                            onError={(e) => { 
-                                                e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="1800" viewBox="0 0 600 1800"><rect width="600" height="1800" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="40" fill="%239ca3af">이미지 오류</text></svg>'; 
-                                            }} 
+                                        <img
+                                            src={frame.url}
+                                            alt={frame.name}
+                                            className="max-w-full max-h-full object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-[1.02]"
+                                            onError={(e) => {
+                                                e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="1800" viewBox="0 0 600 1800"><rect width="600" height="1800" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="40" fill="%239ca3af">이미지 오류</text></svg>';
+                                            }}
                                         />
                                     </div>
                                     <div className="p-3 md:p-4 text-center border-t bg-white mt-auto">
@@ -304,19 +322,19 @@
 
                         {totalPages > 1 && (
                             <div className="flex justify-center items-center space-x-6 mt-8 mb-2">
-                                <button 
+                                <button
                                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                     disabled={currentPage === 1}
                                     className={`w-14 h-14 flex justify-center items-center rounded-full text-2xl transition-all shadow-sm ${currentPage === 1 ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-white border-2 border-pink-200 text-pink-500 hover:bg-pink-50 hover:border-pink-400'}`}
                                 >
                                     <i className="ph-bold ph-caret-left"></i>
                                 </button>
-                                
+
                                 <div className="text-xl font-bold text-gray-800 bg-gray-100 px-6 py-2 rounded-full">
                                     {currentPage} <span className="text-gray-400 font-medium">/ {totalPages}</span>
                                 </div>
-                                
-                                <button 
+
+                                <button
                                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                     disabled={currentPage === totalPages}
                                     className={`w-14 h-14 flex justify-center items-center rounded-full text-2xl transition-all shadow-sm ${currentPage === totalPages ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-white border-2 border-pink-200 text-pink-500 hover:bg-pink-50 hover:border-pink-400'}`}
@@ -335,12 +353,12 @@
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
             const streamRef = useRef(null); // 스트림을 ref로 관리하여 안전하게 해제
-            
+
             const [photos, setPhotos] = useState([]);
             const [isShooting, setIsShooting] = useState(false);
-            const [timeLeft, setTimeLeft] = useState(null); 
+            const [timeLeft, setTimeLeft] = useState(null);
             const [flash, setFlash] = useState(false);
-            const [cameraError, setCameraError] = useState(null); 
+            const [cameraError, setCameraError] = useState(null);
 
             // 카메라 초기화 로직 (단 1번만 안전하게 실행되도록 통합)
             const initCamera = async () => {
@@ -348,7 +366,7 @@
                     streamRef.current.getTracks().forEach(track => track.stop());
                 }
                 setCameraError(null);
-                
+
                 if (window.isSecureContext === false && window.location.hostname !== 'localhost') {
                     setCameraError("보안(HTTPS 또는 localhost) 연결이 아니어서 카메라를 켤 수 없습니다.");
                     return;
@@ -357,7 +375,7 @@
                     setCameraError("카메라를 지원하지 않는 브라우저입니다. 크롬(Chrome) 최신 버전을 권장합니다.");
                     return;
                 }
-                
+
                 try {
                     const newStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }, audio: false });
                     streamRef.current = newStream;
@@ -385,7 +403,7 @@
 
             useEffect(() => {
                 initCamera();
-                return () => { 
+                return () => {
                     if (streamRef.current) {
                         streamRef.current.getTracks().forEach(track => track.stop());
                     }
@@ -410,16 +428,16 @@
                     const ctx = canvas.getContext('2d');
                     ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
+
                     const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                    
+
                     setPhotos(prev => {
                         const newPhotos = [...prev, dataUrl];
-                        if (newPhotos.length >= 8) { finishShooting(newPhotos); setTimeLeft(null); } 
+                        if (newPhotos.length >= 8) { finishShooting(newPhotos); setTimeLeft(null); }
                         else { setTimeLeft(5); }
                         return newPhotos;
                     });
-                    
+
                     setFlash(true); setTimeout(() => setFlash(false), 300);
                 }
             }, [cameraError]);
@@ -433,7 +451,7 @@
 
             const startShooting = () => {
                 if (isShooting || cameraError) return;
-                setIsShooting(true); setPhotos([]); 
+                setIsShooting(true); setPhotos([]);
                 setTimeLeft(5);
             };
 
@@ -441,18 +459,18 @@
                 const dummyPhotos = [];
                 const canvas = document.createElement('canvas');
                 canvas.width = 1280; canvas.height = 720; const ctx = canvas.getContext('2d');
-                for(let i=0; i<8; i++) {
+                for (let i = 0; i < 8; i++) {
                     ctx.fillStyle = `hsl(${i * 45}, 70%, 80%)`; ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.fillStyle = "#333"; ctx.font = "bold 80px sans-serif"; ctx.textAlign = "center";
-                    ctx.fillText(`임시 사진 ${i+1}`, canvas.width/2, canvas.height/2);
+                    ctx.fillText(`임시 사진 ${i + 1}`, canvas.width / 2, canvas.height / 2);
                     dummyPhotos.push(canvas.toDataURL('image/jpeg', 0.8));
                 }
                 onFinish(dummyPhotos);
             };
 
             // 💡 4컷형일 경우 카메라 화면을 세로 비율(560:810)로 길게 변경합니다.
-            const boothStyle = layoutMode === '4cut' 
-                ? { aspectRatio: '56 / 81', height: '55vh', maxWidth: '100%' } 
+            const boothStyle = layoutMode === '4cut'
+                ? { aspectRatio: '56 / 81', height: '55vh', maxWidth: '100%' }
                 : { aspectRatio: '16 / 9', maxHeight: '60vh', width: 'auto' };
 
             return (
@@ -463,7 +481,7 @@
                         </h2>
                         {isShooting && !cameraError && <p className="text-pink-500 font-medium mt-1">화면을 클릭하면 바로 찍힙니다!</p>}
                     </div>
-                    
+
                     <div className={`relative rounded-2xl overflow-hidden bg-black flex justify-center items-center shadow-inner mx-auto ${!cameraError ? 'cursor-pointer' : ''}`} style={boothStyle} onClick={(!cameraError && isShooting) ? handleCapture : undefined}>
                         {cameraError ? (
                             <div className="text-white text-center p-6 flex flex-col items-center w-full h-full justify-center">
@@ -481,7 +499,7 @@
                         ) : (
                             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform scale-x-[-1]"></video>
                         )}
-                        
+
                         {isShooting && timeLeft > 0 && !cameraError && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 pointer-events-none">
                                 <span className="text-9xl text-white font-bold drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">{timeLeft}</span>
@@ -525,7 +543,7 @@
                 <div className="animate-fade-in text-center py-4 print:hidden">
                     <h2 className="text-3xl mb-2">가장 마음에 드는 4장을 골라주세요!</h2>
                     <p className="text-gray-500 mb-6">선택한 순서대로 프레임에 배치됩니다. <span className="text-pink-500 font-bold">({selected.length}/4)</span></p>
-                    
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
                         {photos.map((photoUrl, index) => {
                             const isSelected = selected.includes(index);
@@ -545,11 +563,11 @@
 
         // --- Step 5: 출력 및 전송 분기 선택 ---
         function ActionBranching({ onNext }) {
-            const [mainAction, setMainAction] = useState(null); 
+            const [mainAction, setMainAction] = useState(null);
 
             return (
                 <div className="animate-fade-in text-center flex flex-col items-center py-8 print:hidden">
-                    <h2 className="text-3xl mb-10 font-bold text-gray-800">사진 선택 완료! <br/><span className="text-pink-500">어떻게 받아보시겠어요?</span></h2>
+                    <h2 className="text-3xl mb-10 font-bold text-gray-800">사진 선택 완료! <br /><span className="text-pink-500">어떻게 받아보시겠어요?</span></h2>
                     {!mainAction ? (
                         <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl justify-center">
                             <button onClick={() => onNext('print')} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white p-10 rounded-3xl shadow-lg transition-transform hover:-translate-y-2 flex flex-col items-center">
@@ -577,9 +595,9 @@
         function FinalResult({ selectedPhotos, selectedFrame, layoutMode, deliveryMethod, onReset }) {
             const [mergedImage, setMergedImage] = useState(null);
             const [isGenerating, setIsGenerating] = useState(true);
-            const [downloadQrUrl, setDownloadQrUrl] = useState(''); 
-            const [uploadedLink, setUploadedLink] = useState(''); 
-            const [uploadStatus, setUploadStatus] = useState(''); 
+            const [downloadQrUrl, setDownloadQrUrl] = useState('');
+            const [uploadedLink, setUploadedLink] = useState('');
+            const [uploadStatus, setUploadStatus] = useState('');
 
             useEffect(() => {
                 const drawCover = (ctx, img, x, y, w, h) => {
@@ -606,19 +624,19 @@
                     canvas.width = ORIGINAL_W;
                     canvas.height = ORIGINAL_H;
                     const ctx = canvas.getContext('2d');
-                    
+
                     ctx.fillStyle = "white";
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                     const loadImg = (src) => new Promise((resolve) => {
                         const img = new Image();
-                        if(src.startsWith('http')) img.crossOrigin = "anonymous";
+                        if (src.startsWith('http')) img.crossOrigin = "anonymous";
                         img.onload = () => resolve(img);
                         img.onerror = () => {
                             const errCanvas = document.createElement('canvas');
                             errCanvas.width = 520; errCanvas.height = 400;
                             const errCtx = errCanvas.getContext('2d');
-                            errCtx.fillStyle = '#ddd'; errCtx.fillRect(0,0,520,400);
+                            errCtx.fillStyle = '#ddd'; errCtx.fillRect(0, 0, 520, 400);
                             resolve(errCanvas);
                         };
                         img.src = src;
@@ -653,7 +671,7 @@
                             { x: 30, y: 870 },
                             { x: 610, y: 870 }
                         ];
-                        
+
                         // 사진 4장 렌더링
                         photoImgs.forEach((img, i) => {
                             drawCover(tempCtx, img, positions[i].x, positions[i].y, targetW, targetH);
@@ -663,10 +681,10 @@
                     }
 
                     // 💡 핵심 마법 로직: 프린터의 롤러 치우침 현상(아래로 쏠림) 및 짤림 방어 공통 적용
-                    const SCALE_X = 0.96; 
-                    const SCALE_Y = 0.93; 
+                    const SCALE_X = 0.96;
+                    const SCALE_Y = 0.93;
                     const OFFSET_Y = -5;
-                    
+
                     const scaledW = ORIGINAL_W * SCALE_X;
                     const scaledH = ORIGINAL_H * SCALE_Y;
                     const startX = (ORIGINAL_W - scaledW) / 2;
@@ -687,7 +705,7 @@
                             const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
                             const data = await res.json();
                             if (data.success) finalUrl = data.data.url;
-                        } catch(e) { console.log('ImgBB 사용자 키 실패'); }
+                        } catch (e) { console.log('ImgBB 사용자 키 실패'); }
                     }
 
                     if (!finalUrl) {
@@ -698,7 +716,7 @@
                             });
                             const data = await res.json();
                             if (data.success) finalUrl = data.data.link;
-                        } catch(e) { console.log('Imgur 기본 키 실패'); }
+                        } catch (e) { console.log('Imgur 기본 키 실패'); }
                     }
 
                     if (!finalUrl) {
@@ -708,7 +726,7 @@
                             const res = await fetch('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: formData });
                             const data = await res.json();
                             if (data.status === 'success') finalUrl = data.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
-                        } catch(e) { console.log('Tmpfiles 실패'); }
+                        } catch (e) { console.log('Tmpfiles 실패'); }
                     }
 
                     return finalUrl;
@@ -716,9 +734,9 @@
 
                 const processFinalImage = async () => {
                     setUploadStatus('사진을 합성하는 중입니다...');
-                    
+
                     let finalDataUrl = await generateBaseCanvas();
-                    
+
                     if (!finalDataUrl) {
                         alert("이미지 생성에 실패했습니다.");
                         setIsGenerating(false);
@@ -731,31 +749,31 @@
 
                         if (uploadedUrl) {
                             setUploadedLink(uploadedUrl);
-                            
+
                             const downloadQr = await QRCode.toDataURL(uploadedUrl, { width: 300, margin: 2, errorCorrectionLevel: 'M' });
                             setDownloadQrUrl(downloadQr);
-                            
+
                             const miniQrDataUrl = await QRCode.toDataURL(uploadedUrl, { width: 90, margin: 1, errorCorrectionLevel: 'L' });
-                            
+
                             const canvas = document.createElement('canvas');
                             const ORIGINAL_W = 1200; // 통합 캔버스
                             const ORIGINAL_H = 1800;
                             canvas.width = ORIGINAL_W;
                             canvas.height = ORIGINAL_H;
                             const ctx = canvas.getContext('2d');
-                            
+
                             const baseImg = new Image(); baseImg.src = finalDataUrl;
                             const qrImg = new Image(); qrImg.src = miniQrDataUrl;
-                            
+
                             await new Promise(r => baseImg.onload = r);
                             await new Promise(r => qrImg.onload = r);
-                            
+
                             ctx.drawImage(baseImg, 0, 0);
-                            
+
                             // 💡 QR 코드도 동일한 보정값 적용 (합성된 원본 이미지 비율과 동일하게 싱크)
                             const SCALE_X = 0.96;
                             const SCALE_Y = 0.93;
-                            const OFFSET_Y = -5; 
+                            const OFFSET_Y = -5;
                             const startX = (ORIGINAL_W - ORIGINAL_W * SCALE_X) / 2;
                             const startY = ((ORIGINAL_H - ORIGINAL_H * SCALE_Y) / 2) + OFFSET_Y;
 
@@ -766,7 +784,7 @@
                                 ctx.drawImage(qrImg, startX + qrMargin, startY + qrMargin, qrSize, qrSize);
                                 // 오른쪽 프레임 QR (8컷용)
                                 const rightFrameStartX = startX + (600 * SCALE_X);
-                                ctx.drawImage(qrImg, rightFrameStartX + qrMargin, startY + qrMargin, qrSize, qrSize); 
+                                ctx.drawImage(qrImg, rightFrameStartX + qrMargin, startY + qrMargin, qrSize, qrSize);
                             } else if (layoutMode === '4cut') {
                                 // 🌟 4컷형은 사진을 가리지 않게 우측 하단 여백 쪽에 QR 1개 삽입
                                 // 크기를 줄이고(70px) 여백을 늘려(35px) 삐져나오지 않도록 재배치 완료
@@ -777,7 +795,7 @@
                                 const qrY = startY + (ORIGINAL_H * SCALE_Y) - qrSize - qrMarginBottom;
                                 ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
                             }
-                            
+
                             finalDataUrl = canvas.toDataURL('image/jpeg', 0.95);
                         } else {
                             console.error("모든 서버 업로드 실패");
@@ -824,7 +842,7 @@
                 <>
                     <div className="animate-fade-in text-center flex flex-col items-center py-4 print:hidden">
                         <h2 className="text-3xl mb-4 text-pink-500 font-bold">인생네컷 완성! 🎉</h2>
-                        
+
                         {isGenerating ? (
                             <div className="flex flex-col items-center justify-center h-[500px]">
                                 <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-pink-500 mb-6"></div>
@@ -832,7 +850,7 @@
                             </div>
                         ) : (
                             <div className="w-full max-w-5xl flex flex-col md:flex-row gap-8 items-center md:items-start justify-center">
-                                
+
                                 <div className="relative shadow-2xl border-4 border-gray-100 rounded-xl flex-shrink-0 bg-white p-3 flex justify-center items-center">
                                     <img src={mergedImage} alt="Final Result" className="max-h-[50vh] md:max-h-[65vh] w-auto object-contain drop-shadow-md" />
                                 </div>
@@ -842,7 +860,7 @@
                                         <div className="bg-blue-50 p-6 rounded-3xl border-2 border-blue-100 flex flex-col items-center animate-fade-in shadow-md">
                                             <i className="ph-fill ph-printer text-6xl text-blue-500 mb-4"></i>
                                             <h3 className="text-2xl font-bold text-gray-800 mb-2">출력 진행 중!</h3>
-                                            
+
                                             <div className="bg-yellow-50 border border-yellow-300 p-4 rounded-xl text-left mb-6 w-full shadow-inner">
                                                 <p className="text-yellow-700 font-bold mb-2 text-sm flex items-center">
                                                     <i className="ph-fill ph-warning-circle text-lg mr-1"></i>
@@ -872,7 +890,7 @@
                                                     <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-200 mb-4">
                                                         <img src={downloadQrUrl} className="w-48 h-48 object-contain" />
                                                     </div>
-                                                    
+
                                                     <div className="w-full bg-gray-50 p-3 rounded-lg mb-4 text-center">
                                                         <p className="text-xs text-gray-500 mb-1">스캔이 안된다면 아래 링크를 클릭하세요</p>
                                                         <a href={uploadedLink} target="_blank" rel="noreferrer" className="text-blue-500 text-sm font-bold underline break-all font-sans">
@@ -888,11 +906,11 @@
                                                 </div>
                                             )}
                                             <p className="text-xs text-gray-400 mb-4 text-center break-keep">
-                                                {downloadQrUrl 
-                                                    ? "스캔 시 폰으로 사진을 저장할 수 있습니다.\n(사진에 찍힌 작은 QR과 동일한 링크입니다)" 
+                                                {downloadQrUrl
+                                                    ? "스캔 시 폰으로 사진을 저장할 수 있습니다.\n(사진에 찍힌 작은 QR과 동일한 링크입니다)"
                                                     : "클라우드 서버 오류입니다. 아래 버튼을 눌러\n이 컴퓨터 기기에 먼저 파일로 저장해주세요."}
                                             </p>
-                                            
+
                                             <button onClick={handleLocalDownload} className={`bg-gray-200 text-gray-700 hover:bg-gray-300 w-full py-3 rounded-full text-lg font-bold flex justify-center items-center mb-2 transition-transform hover:-translate-y-1`}>
                                                 이 컴퓨터에 바로 파일 다운로드
                                             </button>
@@ -904,8 +922,8 @@
                                         <div className="bg-white p-6 rounded-3xl border-2 border-gray-100 flex flex-col items-center animate-fade-in shadow-xl">
                                             <div className="w-20 h-20 bg-[#FEE500] rounded-full flex items-center justify-center mb-6 shadow-sm"><i className="ph-fill ph-chat-circle text-4xl text-black"></i></div>
                                             <h3 className="text-xl font-bold mb-2">사진 저장 후 공유하기</h3>
-                                            <p className="text-sm text-gray-500 mb-4 text-center">아래 버튼으로 기기에 이미지를 다운로드한 후,<br/>카카오톡을 열어 친구에게 전송해보세요.</p>
-                                            
+                                            <p className="text-sm text-gray-500 mb-4 text-center">아래 버튼으로 기기에 이미지를 다운로드한 후,<br />카카오톡을 열어 친구에게 전송해보세요.</p>
+
                                             <button onClick={handleLocalDownload} className={`bg-[#FEE500] text-black hover:bg-[#F4DC00] w-full py-4 rounded-full text-xl font-bold flex justify-center items-center shadow-md mb-2 transition-transform hover:-translate-y-1`}>
                                                 <i className="ph-bold ph-download-simple mr-2"></i> 사진 다운로드 (.jpg)
                                             </button>
@@ -932,4 +950,5 @@
         root.render(<App />);
     </script>
 </body>
+
 </html>
